@@ -30,9 +30,89 @@ body {
   margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+h1 {
+  text-align: center;
+}
+
+h2 {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+h3 {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.view_main {
+  height: 100%;
+}
+
+.setting_section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 70px;
+
+  input {
+    height: 25px;
+    width: 140px;
+    margin: auto;
+    padding: 15px; 
+    font-size: 17px;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid lightseagreen;
+    border-radius: 5px;
+  }
+}
+
+.insert_section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 500px;
+  margin: 20px auto 0;
+
+  .insert_team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+    padding-bottom: 35px;
+
+    input {
+      height: 30px;
+      width: 120px;
+      margin: 10px;
+      padding: 20px 10px; 
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border: 2px solid lightseagreen;
+      border-radius: 10px;
+    }
+  }
+}
+
+.button_section {
+  display: flex;
+  align-items: center;
+  margin: 10px auto;
+  padding-bottom: 80px;
+
+  button {
+    height: 40px;
+    width: 200px;
+    margin: auto;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: cornsilk;
+    background-color: cadetblue;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
