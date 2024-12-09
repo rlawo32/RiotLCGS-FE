@@ -36,7 +36,7 @@ const MainView = (props:{gameId:number, gameData:object}) => {
 
         axios({
             method: "POST",
-            url: "/api/riot/insertData",
+            url: "/riot/insertData",
             data: JSON.stringify(riotData),
             headers: {'Content-type': 'application/json'}
         }).then((res):void => {
