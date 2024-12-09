@@ -28,7 +28,7 @@ const RiotWebSocket = async(gameId:number) => {
 
   console.log(response.json());
 
-  return JSON.stringify(response.json());
+  return response.json();
   /*
   cwsc.subscribe("/lol-store/v1/catalog/sales", (data) => {
     console.log(data);
