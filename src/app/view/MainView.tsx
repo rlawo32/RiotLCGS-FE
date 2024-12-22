@@ -36,12 +36,16 @@ const MainView = (props:{gameId:number, gameData:object}) => {
 
         axios({
             method: "POST",
-            url: "/riot/insertData",
+            url: "/local/riot/insertData",
             data: JSON.stringify(riotData),
             headers: {'Content-type': 'application/json'}
         }).then((res):void => {
-            alert("저장이 완료되었습니다.");
-            window.location.reload();
+            if(res.data.result) {
+                alert(res.data.data);
+                window.location.reload();
+            } else {
+                alert(res.data.message);
+            }
         }).catch((err):void => {
             alert("서버를 확인해주세요.");
             console.log(err.message);
