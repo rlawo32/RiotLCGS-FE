@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 
-const MainView = (props:{gameId:number, gameData:object}) => {
+const MainView = (props:{gameId:number, gameData:object, connection:string}) => {
 
     const [teamA1, setTeamA1] = useState<string>("");
     const [teamA2, setTeamA2] = useState<string>("");
@@ -18,38 +18,43 @@ const MainView = (props:{gameId:number, gameData:object}) => {
     const [teamB5, setTeamB5] = useState<string>("");
 
     const insertDataHandler = ():void => {
-        const riotData:object = {
-            gameData: props.gameData,
-            teamData: {
-                teamA1: teamA1,
-                teamA2: teamA2,
-                teamA3: teamA3,
-                teamA4: teamA4,
-                teamA5: teamA5,
-                teamB1: teamB1,
-                teamB2: teamB2,
-                teamB3: teamB3,
-                teamB4: teamB4,
-                teamB5: teamB5
-            },
-        }
 
-        axios({
-            method: "POST",
-            url: "/local/riot/insertData",
-            data: JSON.stringify(riotData),
-            headers: {'Content-type': 'application/json'}
-        }).then((res):void => {
-            if(res.data.result) {
-                alert(res.data.data);
-                window.location.reload();
-            } else {
-                alert(res.data.message);
+        if(props.connection === 'Y') {
+            const riotData:object = {
+                gameData: props.gameData,
+                teamData: {
+                    teamA1: teamA1,
+                    teamA2: teamA2,
+                    teamA3: teamA3,
+                    teamA4: teamA4,
+                    teamA5: teamA5,
+                    teamB1: teamB1,
+                    teamB2: teamB2,
+                    teamB3: teamB3,
+                    teamB4: teamB4,
+                    teamB5: teamB5
+                },
             }
-        }).catch((err):void => {
-            alert("서버를 확인해주세요.");
-            console.log(err.message);
-        })
+    
+            axios({
+                method: "POST",
+                url: "/local/riot/insertData",
+                data: JSON.stringify(riotData),
+                headers: {'Content-type': 'application/json'}
+            }).then((res):void => {
+                if(res.data.result) {
+                    alert(res.data.data);
+                    window.location.reload();
+                } else {
+                    alert(res.data.message);
+                }
+            }).catch((err):void => {
+                alert("서버를 확인해주세요.");
+                console.log(err.message);
+            })
+        } else {
+            alert("롤 클라이언트를 켜주세요.");
+        }
     }
  
     useEffect(() => {
@@ -62,7 +67,8 @@ const MainView = (props:{gameId:number, gameData:object}) => {
         <div className="view_main">
             <h1>커스텀 게임 입력</h1>
             <div className="setting_section">
-            <h3>GAME ID</h3>
+                {props.connection === 'N' ? <h5>롤 클라이언트가 꺼져있습니다.</h5> : <></>}
+                <h3>GAME ID</h3>
                 <input type="text" value={props.gameId} readOnly />
             </div>
             <div className="insert_section">
