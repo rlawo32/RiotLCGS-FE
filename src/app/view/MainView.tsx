@@ -73,7 +73,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
             </div>
             <div className="insert_section">
                 <div className="insert_team team_a">
-                    <h2>팀 A</h2>
+                    <h3>팀 A (블루팀)</h3>
                     <input type="text" value={teamA1} onChange={(e) => setTeamA1(e.target.value)} placeholder="name" maxLength={3} />
                     <input type="text" value={teamA2} onChange={(e) => setTeamA2(e.target.value)} placeholder="name" maxLength={3} />
                     <input type="text" value={teamA3} onChange={(e) => setTeamA3(e.target.value)} placeholder="name" maxLength={3} />
@@ -84,7 +84,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
                     <Image src={"/vs_image.png"} alt={"VS"} height={120} width={120} />
                 </div>
                 <div className="insert_team team_b">
-                    <h2>팀 B</h2>
+                    <h3>팀 B (레드팀)</h3>
                     <input type="text" value={teamB1} onChange={(e) => setTeamB1(e.target.value)} placeholder="name" maxLength={3} />
                     <input type="text" value={teamB2} onChange={(e) => setTeamB2(e.target.value)} placeholder="name" maxLength={3} />
                     <input type="text" value={teamB3} onChange={(e) => setTeamB3(e.target.value)} placeholder="name" maxLength={3} />
