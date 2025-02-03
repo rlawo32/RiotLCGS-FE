@@ -21,6 +21,34 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
 
         if(props.connection === 'Y') {
             const riotData:object = {
+                gameData: props.gameData
+            }
+    
+            axios({
+                method: "POST",
+                url: "/local/riot/insertData",
+                data: JSON.stringify(riotData),
+                headers: {'Content-type': 'application/json'}
+            }).then((res):void => {
+                if(res.data.result) {
+                    alert(res.data.data);
+                    window.location.reload();
+                } else {
+                    alert(res.data.message);
+                }
+            }).catch((err):void => {
+                alert("서버를 확인해주세요.");
+                console.log(err.message);
+            })
+        } else {
+            alert("롤 클라이언트를 켜주세요.");
+        }
+    }
+
+    const insertPlayerDataHandler = ():void => {
+
+        if(props.connection === 'Y') {
+            const riotData:object = {
                 gameData: props.gameData,
                 teamData: {
                     teamA1: teamA1,
@@ -38,7 +66,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
     
             axios({
                 method: "POST",
-                url: "/local/riot/insertData",
+                url: "/local/riot/insertPlayerData",
                 data: JSON.stringify(riotData),
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
@@ -93,7 +121,8 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
                 </div>
             </div>
             <div className="button_section">
-                <button onClick={() => insertDataHandler()}>저장</button>
+                <button onClick={() => insertDataHandler()}>게임 저장</button>
+                <button onClick={() => insertPlayerDataHandler()}>플레이어 저장</button>
             </div>
         </div>
     )
