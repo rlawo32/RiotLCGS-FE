@@ -4,24 +4,36 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 
-const MainView = (props:{gameId:number, gameData:object, connection:string}) => {
+const MainView = (props:{gameId:number, gameData:object, rankData:object, connection:string}) => {
 
-    const [teamA1, setTeamA1] = useState<string>("");
-    const [teamA2, setTeamA2] = useState<string>("");
-    const [teamA3, setTeamA3] = useState<string>("");
-    const [teamA4, setTeamA4] = useState<string>("");
-    const [teamA5, setTeamA5] = useState<string>("");
-    const [teamB1, setTeamB1] = useState<string>("");
-    const [teamB2, setTeamB2] = useState<string>("");
-    const [teamB3, setTeamB3] = useState<string>("");
-    const [teamB4, setTeamB4] = useState<string>("");
-    const [teamB5, setTeamB5] = useState<string>("");
+    const [aTeamTop, setATeamTop] = useState<string>("");
+    const [aTeamJug, setATeamJug] = useState<string>("");
+    const [aTeamMid, setATeamMid] = useState<string>("");
+    const [aTeamAdc, setATeamAdc] = useState<string>("");
+    const [aTeamSup, setATeamSup] = useState<string>("");
+    const [bTeamTop, setBTeamTop] = useState<string>("");
+    const [bTeamJug, setBTeamJug] = useState<string>("");
+    const [bTeamMid, setBTeamMid] = useState<string>("");
+    const [bTeamAdc, setBTeamAdc] = useState<string>("");
+    const [bTeamSup, setBTeamSup] = useState<string>("");
 
     const insertDataHandler = ():void => {
 
         if(props.connection === 'Y') {
             const riotData:object = {
-                gameData: props.gameData
+                gameData: props.gameData,
+                teamData: [
+                    {puuid:'', teamId:100, line:'TOP', name:aTeamTop},
+                    {puuid:'', teamId:100, line:'JUG', name:aTeamJug},
+                    {puuid:'', teamId:100, line:'MID', name:aTeamMid},
+                    {puuid:'', teamId:100, line:'ADC', name:aTeamAdc},
+                    {puuid:'', teamId:100, line:'SUP', name:aTeamSup},
+                    {puuid:'', teamId:200, line:'TOP', name:bTeamTop},
+                    {puuid:'', teamId:200, line:'JUG', name:bTeamJug},
+                    {puuid:'', teamId:200, line:'MID', name:bTeamMid},
+                    {puuid:'', teamId:200, line:'ADC', name:bTeamAdc},
+                    {puuid:'', teamId:200, line:'SUP', name:bTeamSup}
+                ]
             }
     
             axios({
@@ -31,7 +43,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
                 if(res.data.result) {
-                    alert(res.data.data);
+                    alert(res.data.message);
                     window.location.reload();
                 } else {
                     alert(res.data.message);
@@ -45,23 +57,15 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
         }
     }
 
+    console.log(props.gameData);
+    console.log(props.rankData);
+
     const insertPlayerDataHandler = ():void => {
 
         if(props.connection === 'Y') {
             const riotData:object = {
                 gameData: props.gameData,
-                teamData: {
-                    teamA1: teamA1,
-                    teamA2: teamA2,
-                    teamA3: teamA3,
-                    teamA4: teamA4,
-                    teamA5: teamA5,
-                    teamB1: teamB1,
-                    teamB2: teamB2,
-                    teamB3: teamB3,
-                    teamB4: teamB4,
-                    teamB5: teamB5
-                },
+                rankData: props.rankData
             }
     
             axios({
@@ -71,7 +75,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
                 if(res.data.result) {
-                    alert(res.data.data);
+                    alert(res.data.message);
                     window.location.reload();
                 } else {
                     alert(res.data.message);
@@ -84,13 +88,7 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
             alert("롤 클라이언트를 켜주세요.");
         }
     }
- 
-    useEffect(() => {
-        if(teamA1.length >= 3) {
 
-        }
-    }, [teamA1, teamA2, teamA3, teamA4, teamA5, teamB1, teamB2, teamB3, teamB4, teamB5]);
- 
     return (
         <div className="view_main">
             <h1>커스텀 게임 입력</h1>
@@ -102,22 +100,32 @@ const MainView = (props:{gameId:number, gameData:object, connection:string}) => 
             <div className="insert_section">
                 <div className="insert_team team_a">
                     <h3>팀 A (블루팀)</h3>
-                    <input type="text" value={teamA1} onChange={(e) => setTeamA1(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamA2} onChange={(e) => setTeamA2(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamA3} onChange={(e) => setTeamA3(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamA4} onChange={(e) => setTeamA4(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamA5} onChange={(e) => setTeamA5(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>TOP</h4>
+                    <input type="text" value={aTeamTop} onChange={(e) => setATeamTop(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>JUG</h4>
+                    <input type="text" value={aTeamJug} onChange={(e) => setATeamJug(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>MID</h4>
+                    <input type="text" value={aTeamMid} onChange={(e) => setATeamMid(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>ADC</h4>
+                    <input type="text" value={aTeamAdc} onChange={(e) => setATeamAdc(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>SUP</h4>
+                    <input type="text" value={aTeamSup} onChange={(e) => setATeamSup(e.target.value)} placeholder="name" maxLength={3} />
                 </div>
                 <div>
                     <Image src={"/vs_image.png"} alt={"VS"} height={120} width={120} />
                 </div>
                 <div className="insert_team team_b">
                     <h3>팀 B (레드팀)</h3>
-                    <input type="text" value={teamB1} onChange={(e) => setTeamB1(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamB2} onChange={(e) => setTeamB2(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamB3} onChange={(e) => setTeamB3(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamB4} onChange={(e) => setTeamB4(e.target.value)} placeholder="name" maxLength={3} />
-                    <input type="text" value={teamB5} onChange={(e) => setTeamB5(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>TOP</h4>
+                    <input type="text" value={bTeamTop} onChange={(e) => setBTeamTop(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>JUG</h4>
+                    <input type="text" value={bTeamJug} onChange={(e) => setBTeamJug(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>MID</h4>
+                    <input type="text" value={bTeamMid} onChange={(e) => setBTeamMid(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>ADC</h4>
+                    <input type="text" value={bTeamAdc} onChange={(e) => setBTeamAdc(e.target.value)} placeholder="name" maxLength={3} />
+                    <h4>SUP</h4>
+                    <input type="text" value={bTeamSup} onChange={(e) => setBTeamSup(e.target.value)} placeholder="name" maxLength={3} />
                 </div>
             </div>
             <div className="button_section">
