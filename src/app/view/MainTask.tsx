@@ -3,12 +3,13 @@ import util from "util";
 
 import MainView from "./MainView";
 import RiotWebSocketMatch from "@/app/api/RiotWebSocketMatch";
+import RiotWebSocketRank from "@/app/api/RiotWebSocketRank";
+import RiotWebSocketHistory from "@/app/api/RiotWebSocketHistory";
 
 import { authenticate } from "league-connect";
-import RiotWebSocketRank from "../api/RiotWebSocketRank";
 
 const MainTask = async () => {
-    const gameId:number = 7523820335;
+    const gameId:number = 7800181301;
     let gameData:object = {};
     let rankData:{
         puuid:string,
@@ -25,7 +26,7 @@ const MainTask = async () => {
     }[] = [];
     const exec = util.promisify(cp.exec);
 
-    const processName = "LeagueClientUx";
+    const processName = "LeagueClientUx";   
     let credentials;
     let playerArr:any = [];
     let result_1 = "N";
@@ -45,12 +46,13 @@ const MainTask = async () => {
     } catch (err) {
         result_1 = "N";
     }
-
+    // await RiotWebSocketHistory(credentials)
     result_1 === 'Y' ? gameData = await RiotWebSocketMatch(gameId, credentials) : 0;
   
     if(result_1 === 'Y') {
         const data:any = Object.values(gameData);
-        const participantIdentities:any = Object.values(data[9]);
+        // console.log(data);
+        const participantIdentities:any = Object.values(data[10]);
         playerArr = Object.values(participantIdentities);
         
         for(let i=0; i<playerArr.length; i++) {
