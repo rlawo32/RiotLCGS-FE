@@ -4,12 +4,14 @@ import util from "util";
 import MainView from "./MainView";
 import RiotWebSocketMatch from "@/app/api/RiotWebSocketMatch";
 import RiotWebSocketRank from "@/app/api/RiotWebSocketRank";
+import RiotWebSocketLatest from "@/app/api/RiotWebSocketLatest";
+import RiotWebSocketTimeline from "@/app/api/RiotWebSocketTimeline";
 import RiotWebSocketHistory from "@/app/api/RiotWebSocketHistory";
 
 import { authenticate } from "league-connect";
 
 const MainTask = async () => {
-    const gameId:number = 7800181301;
+    let gameId:number = 7800181301;
     let gameData:object = {};
     let rankData:{
         puuid:string,
@@ -26,11 +28,12 @@ const MainTask = async () => {
     }[] = [];
     const exec = util.promisify(cp.exec);
 
-    const processName = "LeagueClientUx";   
+    const processName:string = "LeagueClientUx";   
     let credentials;
     let playerArr:any = [];
-    let result_1 = "N";
-    let result_2 = "N";
+    let result_1:string = "N";
+    let result_2:string = "N";
+    let result_3:string = "N";
   
     const command = `wmic process get caption | findstr ${processName}.exe`;
     const executionOptions = {shell: "powershell"};
@@ -41,33 +44,59 @@ const MainTask = async () => {
             awaitConnection: true,
             pollInterval: 1000,
         });
+
         // console.log(credentials);
-        result_1 = "Y";
+
+        result_1 = (credentials.certificate && credentials.certificate.length > 0) ? 'Y' : 'N';
     } catch (err) {
         result_1 = "N";
     }
-    // await RiotWebSocketHistory(credentials)
-    result_1 === 'Y' ? gameData = await RiotWebSocketMatch(gameId, credentials) : 0;
-  
-    if(result_1 === 'Y') {
-        const data:any = Object.values(gameData);
-        // console.log(data);
-        const participantIdentities:any = Object.values(data[10]);
-        playerArr = Object.values(participantIdentities);
-        
-        for(let i=0; i<playerArr.length; i++) {
-            console.log(playerArr[i].player.puuid);
-        }
 
-        result_2 = 'Y';
+    if(result_1 === 'Y') {
+        const gameLatest:object = await RiotWebSocketLatest(credentials);
+        console.log(gameLatest);
+
+        if(Object.keys(gameLatest).length !== 0) {
+            const data:any = Object.values(gameLatest);
+            console.log(data);
+
+            const games:any = Object.values(data[10]);
+            console.log(games);
+            const gameArr:any = Object.values(games[10]);
+
+            gameId = gameArr[0].gameId;
+            console.log(gameId);
+
+            result_2 = gameId.toString.length > 0 ? 'Y' : 'N';
+        }
+    }
+  
+    if(result_1 === 'Y' && result_2 === 'Y') {
+        const gameDataCheck:object = await RiotWebSocketMatch(gameId, credentials);
+        const gameTimeline:object = await RiotWebSocketTimeline(gameId, credentials);
+
+        // console.log(gameTimeline);
+        
+        if(Object.keys(gameDataCheck).length !== 0) {
+            gameData = gameDataCheck;
+
+            const data:any = Object.values(gameData);
+            // console.log(data);
+            const participantIdentities:any = Object.values(data[10]);
+            playerArr = Object.values(participantIdentities);
+
+            result_3 = playerArr.length > 0 ? 'Y' : 'N';
+        }
     }
 
-    if(result_2 === 'Y') {
+    if(result_1 === 'Y' && result_3 === 'Y') {
         let tempData:any = {};
         for(let i=0; i<playerArr.length; i++) {
             tempData = await RiotWebSocketRank(playerArr[i].player.puuid, credentials);
             const data:any = Object.values(tempData);
             const highestRankedEntrySR:any = data[6];
+
+            // console.log(playerArr[i].player.puuid);
 
             rankData.push({
                 puuid:playerArr[i].player.puuid,
@@ -84,16 +113,12 @@ const MainTask = async () => {
             });
         }
     }
-
-    // for(let i=0; i<rankData.length; i++) {
-    //     console.log(rankData[i]);
-    // }
     
     //var isWindows = process.platform;
 
     return (
         <>
-            <MainView gameId={gameId} gameData={gameData} rankData={rankData} connection={result_2} />
+            <MainView gameId={gameId} gameData={gameData} rankData={rankData} connection={result_1} />
         </>
     )
 }
