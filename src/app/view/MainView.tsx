@@ -6,7 +6,7 @@ import axios from "axios";
 
 import * as JsonData from "./JsonData"
 
-const MainView = (props:{gameId:number, gameData:object, rankData:object, connection:string}) => {
+const MainView = (props:{gameId:number, gameData:object, rankData:object, laneData:object, connection:string}) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [aTeamTop, setATeamTop] = useState<string>("");
