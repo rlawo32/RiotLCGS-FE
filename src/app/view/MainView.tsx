@@ -6,43 +6,41 @@ import axios from "axios";
 
 import * as JsonData from "./JsonData"
 
-const MainView = (props:{gameId:number, gameData:object, rankData:object, connection:string}) => {
+const MainView = (props:{gameId:number, gameData:object, rankData:object, laneData:Object[], connection:string}) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const [aTeamTop, setATeamTop] = useState<string>("");
-    const [aTeamJug, setATeamJug] = useState<string>("");
-    const [aTeamMid, setATeamMid] = useState<string>("");
-    const [aTeamAdc, setATeamAdc] = useState<string>("");
-    const [aTeamSup, setATeamSup] = useState<string>("");
-    const [bTeamTop, setBTeamTop] = useState<string>("");
-    const [bTeamJug, setBTeamJug] = useState<string>("");
-    const [bTeamMid, setBTeamMid] = useState<string>("");
-    const [bTeamAdc, setBTeamAdc] = useState<string>("");
-    const [bTeamSup, setBTeamSup] = useState<string>("");
+    const [teamBlueTop, setTeamBlueTop] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamBlueJug, setTeamBlueJug] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamBlueMid, setTeamBlueMid] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamBlueAdc, setTeamBlueAdc] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamBlueSup, setTeamBlueSup] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamRedTop, setTeamRedTop] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamRedJug, setTeamRedJug] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamRedMid, setTeamRedMid] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamRedAdc, setTeamRedAdc] = useState<{puuid:string, name:string}>({puuid:'', name:''});
+    const [teamRedSup, setTeamRedSup] = useState<{puuid:string, name:string}>({puuid:'', name:''});
     const [jsonText, setJsonText] = useState<string>("");
 
     const insertDataHandler = ():void => {
-
         if(props.connection === 'Y') {
-
-            if( aTeamTop.length > 0 && aTeamJug.length > 0 &&
-                aTeamMid.length > 0 && aTeamAdc.length > 0 &&
-                aTeamSup.length > 0 && bTeamTop.length > 0 &&
-                bTeamJug.length > 0 && bTeamMid.length > 0 &&
-                bTeamAdc.length > 0 && bTeamSup.length > 0 ) {
+            if( teamBlueTop.name.length > 0 && teamBlueJug.name.length > 0 &&
+                teamBlueMid.name.length > 0 && teamBlueAdc.name.length > 0 &&
+                teamBlueSup.name.length > 0 && teamRedTop.name.length > 0 &&
+                teamRedJug.name.length > 0 && teamRedMid.name.length > 0 &&
+                teamRedAdc.name.length > 0 && teamRedSup.name.length > 0 ) {
                     const riotData:object = {
                         gameData: props.gameData,
                         teamData: [
-                            {puuid:'', teamId:100, line:'TOP', name:aTeamTop},
-                            {puuid:'', teamId:100, line:'JUG', name:aTeamJug},
-                            {puuid:'', teamId:100, line:'MID', name:aTeamMid},
-                            {puuid:'', teamId:100, line:'ADC', name:aTeamAdc},
-                            {puuid:'', teamId:100, line:'SUP', name:aTeamSup},
-                            {puuid:'', teamId:200, line:'TOP', name:bTeamTop},
-                            {puuid:'', teamId:200, line:'JUG', name:bTeamJug},
-                            {puuid:'', teamId:200, line:'MID', name:bTeamMid},
-                            {puuid:'', teamId:200, line:'ADC', name:bTeamAdc},
-                            {puuid:'', teamId:200, line:'SUP', name:bTeamSup}
+                            {puuid:teamBlueTop.puuid, teamId:100, line:'TOP', name:teamBlueTop.name},
+                            {puuid:teamBlueJug.puuid, teamId:100, line:'JUG', name:teamBlueJug.name},
+                            {puuid:teamBlueMid.puuid, teamId:100, line:'MID', name:teamBlueMid.name},
+                            {puuid:teamBlueAdc.puuid, teamId:100, line:'ADC', name:teamBlueAdc.name},
+                            {puuid:teamBlueSup.puuid, teamId:100, line:'SUP', name:teamBlueSup.name},
+                            {puuid:teamRedTop.puuid, teamId:200, line:'TOP', name:teamRedTop.name},
+                            {puuid:teamRedJug.puuid, teamId:200, line:'JUG', name:teamRedJug.name},
+                            {puuid:teamRedMid.puuid, teamId:200, line:'MID', name:teamRedMid.name},
+                            {puuid:teamRedAdc.puuid, teamId:200, line:'ADC', name:teamRedAdc.name},
+                            {puuid:teamRedSup.puuid, teamId:200, line:'SUP', name:teamRedSup.name}
                         ]
                     }
             
@@ -71,7 +69,6 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
     }
 
     const insertPlayerDataHandler = ():void => {
-
         if(props.connection === 'Y') {
             const riotData:object = {
                 gameData: props.gameData,
@@ -117,25 +114,24 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
     }
 
     const insertResetHandler = ():void => {
-        setATeamTop("");
-        setATeamJug("");
-        setATeamMid("");
-        setATeamAdc("");
-        setATeamSup("");
-        setBTeamTop("");
-        setBTeamJug("");
-        setBTeamMid("");
-        setBTeamAdc("");
-        setBTeamSup("");
+        setTeamBlueTop({puuid:'', name:''});
+        setTeamBlueJug({puuid:'', name:''});
+        setTeamBlueMid({puuid:'', name:''});
+        setTeamBlueAdc({puuid:'', name:''});
+        setTeamBlueSup({puuid:'', name:''});
+        setTeamRedTop({puuid:'', name:''});
+        setTeamRedJug({puuid:'', name:''});
+        setTeamRedMid({puuid:'', name:''});
+        setTeamRedAdc({puuid:'', name:''});
+        setTeamRedSup({puuid:'', name:''});
     }
 
-
     const insertJsonHandler = ():string => {
-        const jsonData:{rowNum:number, gameId:number, blueTeamTop:string, blueTeamJug:string, blueTeamMid:string, blueTeamAdc:string, blueTeamSup:string, 
-            redTeamTop:string, redTeamJug:string, redTeamMid:string, redTeamAdc:string, redTeamSup:string} 
+        const jsonData:{rowNum:number, gameId:number, teamBlueTop:string, teamBlueJug:string, teamBlueMid:string, teamBlueAdc:string, teamBlueSup:string, 
+            teamRedTop:string, teamRedJug:string, teamRedMid:string, teamRedAdc:string, teamRedSup:string} 
             = 
-            {rowNum:JsonData.autoPlayerData.length+1, gameId:props.gameId, blueTeamTop:aTeamTop, blueTeamJug:aTeamJug, blueTeamMid:aTeamMid, blueTeamAdc:aTeamAdc, blueTeamSup:aTeamSup, 
-                redTeamTop:bTeamTop, redTeamJug:bTeamJug, redTeamMid:bTeamMid, redTeamAdc:bTeamAdc, redTeamSup:bTeamSup};
+            {rowNum:JsonData.autoPlayerData.length+1, gameId:props.gameId, teamBlueTop:teamBlueTop, teamBlueJug:teamBlueJug, teamBlueMid:teamBlueMid, teamBlueAdc:teamBlueAdc, teamBlueSup:teamBlueSup, 
+                teamRedTop:teamRedTop, teamRedJug:teamRedJug, teamRedMid:teamRedMid, teamRedAdc:teamRedAdc, teamRedSup:teamRedSup};
 
         const jsonFormatted:string = "{" +  Object.entries(jsonData).map(([key, value]) => key === 'rowNum' || key === 'gameId' ? `${key}:${value}` :`${key}:'${value}'`).join(', ') + "},";
         console.log("{" + jsonFormatted + "},");
@@ -156,18 +152,36 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
     }
 
     useEffect(() => {
+        props.laneData.forEach((item:any) => {
+                if(item.team === 'B') {
+                    if(item.lane === 'TOP') setTeamBlueTop({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'JUG') setTeamBlueJug({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'MID') setTeamBlueMid({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'ADC') setTeamBlueAdc({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'SUP') setTeamBlueSup({puuid:item.puuid, name:item.name});
+                } else {
+                    if(item.lane === 'TOP') setTeamRedTop({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'JUG') setTeamRedJug({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'MID') setTeamRedMid({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'ADC') setTeamRedAdc({puuid:item.puuid, name:item.name});
+                    else if(item.lane === 'SUP') setTeamRedSup({puuid:item.puuid, name:item.name});
+                }
+        })
+    }, [])
+
+    useEffect(() => {
         for(let i = 0; i < JsonData.autoPlayerData.length; i++) {
             if(JsonData.autoPlayerData[i].gameId === props.gameId) {
-                setATeamTop(JsonData.autoPlayerData[i].blueTeamTop);
-                setATeamJug(JsonData.autoPlayerData[i].blueTeamJug);
-                setATeamMid(JsonData.autoPlayerData[i].blueTeamMid);
-                setATeamAdc(JsonData.autoPlayerData[i].blueTeamAdc);
-                setATeamSup(JsonData.autoPlayerData[i].blueTeamSup);
-                setBTeamTop(JsonData.autoPlayerData[i].redTeamTop);
-                setBTeamJug(JsonData.autoPlayerData[i].redTeamJug);
-                setBTeamMid(JsonData.autoPlayerData[i].redTeamMid);
-                setBTeamAdc(JsonData.autoPlayerData[i].redTeamAdc);
-                setBTeamSup(JsonData.autoPlayerData[i].redTeamSup);
+                setTeamBlueTop({puuid:'', name:JsonData.autoPlayerData[i].teamBlueTop});
+                setTeamBlueJug({puuid:'', name:JsonData.autoPlayerData[i].teamBlueJug});
+                setTeamBlueMid({puuid:'', name:JsonData.autoPlayerData[i].teamBlueMid});
+                setTeamBlueAdc({puuid:'', name:JsonData.autoPlayerData[i].teamBlueAdc});
+                setTeamBlueSup({puuid:'', name:JsonData.autoPlayerData[i].teamBlueSup});
+                setTeamRedTop({puuid:'', name:JsonData.autoPlayerData[i].teamRedTop});
+                setTeamRedJug({puuid:'', name:JsonData.autoPlayerData[i].teamRedJug});
+                setTeamRedMid({puuid:'', name:JsonData.autoPlayerData[i].teamRedMid});
+                setTeamRedAdc({puuid:'', name:JsonData.autoPlayerData[i].teamRedAdc});
+                setTeamRedSup({puuid:'', name:JsonData.autoPlayerData[i].teamRedSup});
                 break;
             }
         }
@@ -176,7 +190,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
     useEffect(() => {
         const jsonText:string = insertJsonHandler();
         setJsonText(jsonText);
-    }, [bTeamSup])
+    }, [teamRedSup])
 
     return (
         <div className="view_main">
@@ -199,15 +213,15 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
                 <div className="insert_team team_a">
                     <h3>팀 A (블루팀)</h3>
                     <h4>TOP</h4>
-                    <input type="text" value={aTeamTop} onChange={(e) => setATeamTop(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamBlueTop.name} onChange={(e) => setTeamBlueTop({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>JUG</h4>
-                    <input type="text" value={aTeamJug} onChange={(e) => setATeamJug(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamBlueJug.name} onChange={(e) => setTeamBlueJug({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>MID</h4>
-                    <input type="text" value={aTeamMid} onChange={(e) => setATeamMid(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamBlueMid.name} onChange={(e) => setTeamBlueMid({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>ADC</h4>
-                    <input type="text" value={aTeamAdc} onChange={(e) => setATeamAdc(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamBlueAdc.name} onChange={(e) => setTeamBlueAdc({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>SUP</h4>
-                    <input type="text" value={aTeamSup} onChange={(e) => setATeamSup(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamBlueSup.name} onChange={(e) => setTeamBlueSup({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                 </div>
                 <div>
                     <Image src={"/vs_image.png"} alt={"VS"} height={120} width={120} />
@@ -215,15 +229,15 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, connec
                 <div className="insert_team team_b">
                     <h3>팀 B (레드팀)</h3>
                     <h4>TOP</h4>
-                    <input type="text" value={bTeamTop} onChange={(e) => setBTeamTop(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamRedTop.name} onChange={(e) => setTeamRedTop({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>JUG</h4>
-                    <input type="text" value={bTeamJug} onChange={(e) => setBTeamJug(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamRedJug.name} onChange={(e) => setTeamRedJug({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>MID</h4>
-                    <input type="text" value={bTeamMid} onChange={(e) => setBTeamMid(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamRedMid.name} onChange={(e) => setTeamRedMid({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>ADC</h4>
-                    <input type="text" value={bTeamAdc} onChange={(e) => setBTeamAdc(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamRedAdc.name} onChange={(e) => setTeamRedAdc({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                     <h4>SUP</h4>
-                    <input type="text" value={bTeamSup} onChange={(e) => setBTeamSup(e.target.value)} placeholder="name" maxLength={3} />
+                    <input type="text" value={teamRedSup.name} onChange={(e) => setTeamRedSup({puuid:'', name:e.target.value})} placeholder="name" maxLength={3} />
                 </div>
             </div>
             <div className="button_section">
