@@ -9,7 +9,7 @@ import RiotWebSocketHistory from "@/app/api/RiotWebSocketHistory";
 import { authenticate } from "league-connect";
 
 const MainTask = async () => {
-    const gameId:number = 7800181301;
+    const gameId:number = 7844707384;
     let gameData:object = {};
     let rankData:{
         puuid:string,
