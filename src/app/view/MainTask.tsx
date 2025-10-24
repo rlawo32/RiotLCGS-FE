@@ -121,31 +121,32 @@ const MainTask = async () => {
             const gameInfo:any = Object.values(gameData)[10];
             const participantIdentities:any = Object.values(gameInfo);
             const timelines:any = Object.values(gameTimeline)[0];
-            const timeArr:any = Object.values(timelines[2].participantFrames);
+            const timeArr1:any = Object.values(timelines[2].participantFrames);
+            const timeArr2:any = Object.values(timelines[3].participantFrames);
             console.log(participantIdentities);
-            console.log(timeArr);
+            console.log(timeArr1);
+            console.log(timeArr2);
 
             let adNsp:number = -1;
-            for(let i:number=0; i<timeArr.length; i++) {
+            for(let i:number=0; i<timeArr1.length; i++) {
                 const puuid:string = participantIdentities.find((item:any) => item.participantId === timeArr[i].participantId)!.player.puuid;
                 const name:string = playerData.find((item) => item.puuid === puuid)!.name;
                 let lane:string = '';
 
-                if(timeArr[i].position.x < 3000 && timeArr[i].jungleMinionsKilled < 3) {
+                if(timeArr1[i].position.x < 3000 && timeArr1[i].jungleMinionsKilled < 3) {
                     lane = 'TOP';
-                } else if(timeArr[i].level > 1 && timeArr[i].jungleMinionsKilled > 2 && timeArr[i].minionsKilled < 3) {
+                } else if(timeArr1[i].level > 1 && ((timeArr1[i].jungleMinionsKilled > 2 && timeArr1[i].minionsKilled < 3) || (timeArr2[i].jungleMinionsKilled > 3 && timeArr2[i].minionsKilled < 5))) {
                     lane = 'JUG';
-                } else if(timeArr[i].position.x > 10000) {
-                    if(adNsp === -1) {
-                        adNsp = timeArr[i].minionsKilled;
-                    } else {
-                        lane = adNsp < timeArr[i].minionsKilled ? 'ADC' : 'SUP';
+                } else if(timeArr1[i].position.x > 10000) {
+                    if(adNsp === -1){
+                        adNsp = timeArr1[i].minionsKilled;
+                        lane = adNsp < timeArr1[i].minionsKilled ? 'ADC' : 'SUP' || adNsp < timeArr2[i].minionsKilled ? 'ADC' : 'SUP';
                         adNsp = -1;
                     }
                 } else {
-                    lane = 'MID';
+                    lane = 'MID';    
                 }
-
+                
                 laneData.push({puuid:puuid, team:i < 5 ? 'B' : 'R', lane:lane, name:name});
             }
             laneData.forEach((item) => {
