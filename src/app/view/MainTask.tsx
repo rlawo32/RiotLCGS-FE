@@ -127,9 +127,10 @@ const MainTask = async () => {
             console.log(timeArr1);
             console.log(timeArr2);
 
-            let adNsp:number = -1;
+            let temp:number = -1;
+            let adsp:string = '';
             for(let i:number=0; i<timeArr1.length; i++) {
-                const puuid:string = participantIdentities.find((item:any) => item.participantId === timeArr[i].participantId)!.player.puuid;
+                const puuid:string = participantIdentities.find((item:any) => item.participantId === timeArr1[i].participantId)!.player.puuid;
                 const name:string = playerData.find((item) => item.puuid === puuid)!.name;
                 let lane:string = '';
 
@@ -138,10 +139,14 @@ const MainTask = async () => {
                 } else if(timeArr1[i].level > 1 && ((timeArr1[i].jungleMinionsKilled > 2 && timeArr1[i].minionsKilled < 3) || (timeArr2[i].jungleMinionsKilled > 3 && timeArr2[i].minionsKilled < 5))) {
                     lane = 'JUG';
                 } else if(timeArr1[i].position.x > 10000) {
-                    if(adNsp === -1){
-                        adNsp = timeArr1[i].minionsKilled;
-                        lane = adNsp < timeArr1[i].minionsKilled ? 'ADC' : 'SUP' || adNsp < timeArr2[i].minionsKilled ? 'ADC' : 'SUP';
-                        adNsp = -1;
+                    const cs = timeArr1[i].minionsKilled + timeArr2[i].minionsKilled;
+            
+                    if (temp === -1) {
+                        temp = cs;
+                    } else {
+                        lane = temp < cs ? 'ADC' : 'SUP';
+                        adsp = lane;
+                        temp = -1;
                     }
                 } else {
                     lane = 'MID';    
@@ -151,11 +156,11 @@ const MainTask = async () => {
             }
             laneData.forEach((item) => {
                 if(item.lane === '') {
-                    item.lane = 'SUP';
+                    adsp === 'ADC' ? item.lane = 'SUP' : item.lane = 'ADC';
                 }
             })
 
-            result_4 = timeArr.length > 0 ? 'Y' : 'N';
+            result_4 = timeArr1.length && timeArr2.length > 0 ? 'Y' : 'N';
         }
     }
 
