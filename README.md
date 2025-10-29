@@ -41,5 +41,5 @@ LCG 프로젝트 중 LCGS-FE는 로컬에서만 활용이 가능한 서비스로
 
 ## 🔗 참고 사이트
 
-[LCU API SWAGGER](https://swagger.dysolix.dev/lcu/) - API Swagger 사이트 <br/>
-[LEAGUE-CONNECT LIB](https://www.npmjs.com/package/league-connect?activeTab=code) - npm 라이브러리 league-connect 
++ API Swagger 사이트 - [LCU API SWAGGER](https://swagger.dysolix.dev/lcu/) <br/>
++ npm 라이브러리 - [LEAGUE-CONNECT LIB](https://www.npmjs.com/package/league-connect?activeTab=code)
