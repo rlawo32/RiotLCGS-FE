@@ -13,7 +13,8 @@ import { authenticate } from "league-connect";
 import { playerData } from "./PlayerData";
 
 const MainTask = async () => {
-    let gameId:number = 7800181301;
+    let gameId:number = 7389173588;
+    let gameType:string = "";
     let gameData:object = {};
     let rankData:{
         puuid:string;
@@ -39,6 +40,7 @@ const MainTask = async () => {
     const processName:string = "LeagueClientUx";   
     let credentials;
     let playerArr:any = [];
+    let status_1:string = "N";
     let result_1:string = "N";
     let result_2:string = "N";
     let result_3:string = "N";
@@ -71,9 +73,11 @@ const MainTask = async () => {
             const gameArr:any = Object.values(games[5]);
 
             gameId = gameArr[0].gameId;
-            gameId = 7895822558;
+            gameType = gameArr[0].gameType;
+            gameId = 8002205128;
+            gameType = 'CUSTOM_GAME';
 
-            result_2 = gameId.toString.length > 0 ? 'Y' : 'N';
+            result_2 = gameId.toString.length > 0 && gameType === 'CUSTOM_GAME' ? 'Y' : 'N';
         }
     }
   
@@ -102,52 +106,163 @@ const MainTask = async () => {
             const timelines:any = Object.values(gameTimeline)[0];
             const timeArr1:any = Object.values(timelines[2].participantFrames);
             const timeArr2:any = Object.values(timelines[3].participantFrames);
-            console.log(participantIdentities);
-            console.log(timeArr1);
-            console.log(timeArr2);
+            const timeArr3:any = Object.values(timelines[4].participantFrames);
+            const timeArr4:any = Object.values(timelines[5].participantFrames);
+            const timeArr5:any = Object.values(timelines[6].participantFrames);
+            const timeArr6:any = Object.values(timelines[7].participantFrames);
+            const timeArr7:any = Object.values(timelines[8].participantFrames);
+            const timeArr8:any = Object.values(timelines[9].participantFrames);
+            const timeArr9:any = Object.values(timelines[10].participantFrames);
+            const timeArrTotal:any[] = [timeArr1, timeArr2, timeArr3, timeArr4, timeArr5, timeArr6, timeArr7, timeArr8, timeArr9];
+            const participantIdCheck:number[] = [];
+            // console.log(participantIdentities);
+            // console.log(timeArr1);
+            // console.log(timeArr2);
 
-            let temp:number = -1;
-            let radsp:string = '';
-            let badsp:string = '';
-            for(let i:number=0; i<timeArr1.length; i++) {
+            // JUG
+            for(let i:number=0; i<timeArr9.length; i++) {
                 const puuid:string = participantIdentities.find((item:any) => item.participantId === timeArr1[i].participantId)!.player.puuid;
-                const name:string = playerData.find((item) => item.puuid === puuid)!.name;
-                let lane:string = '';
+                const targetItem = playerData.find((item) => item.puuid === puuid);
 
-                if(timeArr1[i].position.x < 3000 && timeArr1[i].jungleMinionsKilled < 3) {
-                    lane = 'TOP';
-                } else if(timeArr1[i].level > 1 && ((timeArr1[i].jungleMinionsKilled > 2 && timeArr1[i].minionsKilled < 3) || (timeArr2[i].jungleMinionsKilled > 3 && timeArr2[i].minionsKilled < 5))) {
-                    lane = 'JUG';
-                } else if(timeArr1[i].position.x > 10000) {
-                    const cs = timeArr1[i].minionsKilled + timeArr2[i].minionsKilled;
-            
-                    if (temp === -1) {
-                        temp = cs;
-                    } else {
-                        lane = temp < cs ? 'ADC' : 'SUP';
-                        i < 5 ? badsp = lane : radsp = lane;
-                        temp = -1;
-                    }
-                } else {
-                    lane = 'MID';    
+                if (!targetItem) {
+                    console.error(`데이터를 찾을 수 없습니다. 찾으려는 puuid: ${puuid}`);
+                    throw new Error(`Player not found: ${puuid}`); 
                 }
-                
-                laneData.push({puuid:puuid, team:i < 5 ? 'B' : 'R', lane:lane, name:name});
+                const name:string = targetItem.name;
+
+                if(timeArr9[i].jungleMinionsKilled >= 30) {
+                    laneData.push({puuid:puuid, team:timeArr1[i].participantId < 6 ? 'B' : 'R', lane:'JUG', name:name});
+                    participantIdCheck.push(timeArr1[i].participantId);
+                }                
             }
-            laneData.forEach((item) => {
-                if(item.team === 'B' && item.lane === '') {
-                    badsp === 'ADC' ? item.lane = 'SUP' : item.lane = 'ADC';
-                } else if(item.team === 'R' && item.lane === '') {
-                    radsp === 'ADC' ? item.lane = 'SUP' : item.lane = 'ADC';
+
+            // SUP
+            let searchArrSup:{id:number; minion:number;}[] = [];
+            for(let i:number=0; i<timeArr9.length; i++) {
+                searchArrSup.push({id:timeArr9[i].participantId, minion:timeArr9[i].minionsKilled+timeArr9[i].jungleMinionsKilled});
+            }
+            searchArrSup = searchArrSup.sort((a, b) => a.minion - b.minion).slice(0, 2).sort((a, b) => a.id - b.id);
+            for(let i:number=0; i<2; i++) {
+                const puuid:string = participantIdentities.find((item:any) => item.participantId === searchArrSup[i].id)!.player.puuid;
+                const targetItem = playerData.find((item) => item.puuid === puuid);
+
+                if (!targetItem) {
+                    console.error(`데이터를 찾을 수 없습니다. 찾으려는 puuid: ${puuid}`);
+                    throw new Error(`Player not found: ${puuid}`); 
                 }
-            })
-            console.log(laneData)
+                const name:string = targetItem.name;
+
+                laneData.push({puuid:puuid, team:searchArrSup[i].id < 6 ? 'B' : 'R', lane:'SUP', name:name});
+                participantIdCheck.push(searchArrSup[i].id);    
+            }
+
+            // MID
+            const searchArrMid1 = new Map<number, number>();
+            for(let i:number=0; i<timeArr1.length; i++) {
+                for(let j:number=0; j<timeArrTotal.length; j++) {
+                    if(timeArrTotal[j][i].position.x < 10000 && timeArrTotal[j][i].position.x > 4000 &&
+                       timeArrTotal[j][i].position.y < 10000 && timeArrTotal[j][i].position.y > 4000 ) {
+                        const currentScore = searchArrMid1.get(timeArrTotal[j][i].participantId) || 0;
+                        searchArrMid1.set(timeArrTotal[j][i].participantId, currentScore + 10);
+                    }
+                }
+            }
+            const searchArrMid2 = Array.from(searchArrMid1, ([id, score]) => ({id, score}));
+            searchArrMid2.sort((a, b) => b.score - a.score);
+            for(let i:number=0; i<2; i++) {
+                const puuid:string = participantIdentities.find((item:any) => item.participantId === searchArrMid2[i].id)!.player.puuid;
+                const targetItem = playerData.find((item) => item.puuid === puuid);
+
+                if (!targetItem) {
+                    console.error(`데이터를 찾을 수 없습니다. 찾으려는 puuid: ${puuid}`);
+                    throw new Error(`Player not found: ${puuid}`); 
+                }
+                const name:string = targetItem.name;
+
+                laneData.push({puuid:puuid, team:searchArrMid2[i].id < 6 ? 'B' : 'R', lane:'MID', name:name});               
+                participantIdCheck.push(searchArrMid2[i].id);
+            }
+
+            // ADC
+            const searchArrSup1:{id:number; position:{x:number; y:number;};}[] = []; // blue
+            const searchArrSup2:{id:number; position:{x:number; y:number;};}[] = []; // red
+            const searchArrAdc1 = new Map<number, number>();
+            for(let i:number=0; i<timeArr1.length; i++) {
+                for(let j:number=0; j<timeArrTotal.length; j++) {
+                    if(timeArrTotal[j][i].participantId < 6 && timeArrTotal[j][i].participantId === searchArrSup[0].id) {
+                        searchArrSup1.push({id:timeArrTotal[j][i].participantId, position:timeArrTotal[j][i].position});
+                    } else if(timeArrTotal[j][i].participantId > 5 && timeArrTotal[j][i].participantId === searchArrSup[1].id) {
+                        searchArrSup2.push({id:timeArrTotal[j][i].participantId, position:timeArrTotal[j][i].position});
+                    }
+                }
+            }
+            if(searchArrSup1.length > 0 && searchArrSup2.length > 0) {
+                for(let i:number=0; i<timeArr1.length; i++) {
+                    for(let j:number=0; j<timeArrTotal.length; j++) {
+                        if(timeArrTotal[j][i].participantId < 6) {
+                            if(timeArrTotal[j][i].position.x > 9000 && timeArrTotal[j][i].position.y < 3000 ||
+                               (Math.abs(timeArrTotal[j][i].position.x - searchArrSup1[j].position.x) < 1500 && 
+                                Math.abs(timeArrTotal[j][i].position.y - searchArrSup1[j].position.y) < 1500)
+                            ) {
+                                const currentScore = searchArrAdc1.get(timeArrTotal[j][i].participantId) || 0;
+                                searchArrAdc1.set(timeArrTotal[j][i].participantId, currentScore + 10);
+                            }
+                        } else {
+                            if(timeArrTotal[j][i].position.x > 9000 && timeArrTotal[j][i].position.y < 3000 ||
+                               (Math.abs(timeArrTotal[j][i].position.x - searchArrSup2[j].position.x) < 1500 && 
+                                Math.abs(timeArrTotal[j][i].position.y - searchArrSup2[j].position.y) < 1500)
+                            ) {
+                                const currentScore = searchArrAdc1.get(timeArrTotal[j][i].participantId) || 0;
+                                searchArrAdc1.set(timeArrTotal[j][i].participantId, currentScore + 10);
+                            }
+                        }
+                    }
+                }
+            }
+            let searchArrAdc2 = Array.from(searchArrAdc1, ([id, score]) => ({id, score}));
+            searchArrAdc2 = searchArrAdc2.filter((item) => item.id !== searchArrSup[0].id && item.id !== searchArrSup[1].id).sort((a, b) => b.score - a.score);
+            for(let i:number=0; i<2; i++) {
+                const puuid:string = participantIdentities.find((item:any) => item.participantId === searchArrAdc2[i].id)!.player.puuid;
+                const targetItem = playerData.find((item) => item.puuid === puuid);
+
+                if (!targetItem) {
+                    console.error(`데이터를 찾을 수 없습니다. 찾으려는 puuid: ${puuid}`);
+                    throw new Error(`Player not found: ${puuid}`); 
+                }
+                const name:string = targetItem.name;
+
+                laneData.push({puuid:puuid, team:searchArrAdc2[i].id < 6 ? 'B' : 'R', lane:'ADC', name:name});               
+                participantIdCheck.push(searchArrAdc2[i].id);
+            }
+
+            // TOP
+            const searchArrTop:number[] = [];
+            for(let i:number=1; i<=10; i++) {
+                if(!participantIdCheck.includes(i)) {
+                    searchArrTop.push(i);
+                }
+            }
+            for(let i:number=0; i<2; i++) {
+                const puuid:string = participantIdentities.find((item:any) => item.participantId === searchArrTop[i])!.player.puuid;
+                const targetItem = playerData.find((item) => item.puuid === puuid);
+
+                if (!targetItem) {
+                    console.error(`데이터를 찾을 수 없습니다. 찾으려는 puuid: ${puuid}`);
+                    throw new Error(`Player not found: ${puuid}`); 
+                }
+                const name:string = targetItem.name;
+
+                laneData.push({puuid:puuid, team:searchArrTop[i] < 6 ? 'B' : 'R', lane:'TOP', name:name});               
+                participantIdCheck.push(searchArrTop[i]);
+            }
+
+            // console.log(laneData)
 
             result_4 = timeArr1.length && timeArr2.length > 0 ? 'Y' : 'N';
         }
     }
 
-    if(result_1 === 'Y' && result_3 === 'Y' && result_4 === 'Y') {
+    if(result_1 === 'Y' && result_3 === 'Y' && result_4 === 'Y' && status_1 === 'Y') {
         let tempData:any = {};
         for(let i=0; i<playerArr.length; i++) {
             tempData = await RiotWebSocketRank(playerArr[i].player.puuid, credentials);
@@ -176,7 +291,7 @@ const MainTask = async () => {
 
     return (
         <>
-            <MainView gameId={gameId} gameData={gameData} rankData={rankData} laneData={laneData} connection={result_1} />
+            <MainView gameId={gameId} gameData={gameData} rankData={rankData} laneData={laneData} connection={result_1} credential={credentials} />
         </>
     )
 }
