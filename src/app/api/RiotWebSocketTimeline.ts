@@ -7,7 +7,7 @@ const RiotWebSocketTimeline = async (gameId:number, credentials:any) => {
     url: '/lol-match-history/v1/game-timelines/' + gameId
   }, credentials);
 
-  console.log(response.json());
+  // console.log(response.json());
 
   return response.json();
 }
