@@ -60,6 +60,12 @@ h5 {
   align-items: center;
   margin-top: 30px;
 
+  .control_box {
+    display: flex;
+    align-items: center;
+    height: 45px;
+  }
+
   .gameId_section {
     position: relative;
     display: flex;
@@ -84,11 +90,6 @@ h5 {
     width: 200px;
     margin: 0 15px;
     text-align: center;
-
-    div {
-      display: flex;
-      align-items: center;
-    }
 
     button {
       margin-left: 5px;
@@ -133,6 +134,21 @@ h5 {
       text-align: center;
       border: 2px solid lightseagreen;
       border-radius: 10px;
+    }
+  }
+
+  .insert_info {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .change_info {
+      position: absolute;
+      top: -130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
   }
 }
