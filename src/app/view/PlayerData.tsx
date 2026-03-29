@@ -22,4 +22,5 @@ export const playerData:{idx:number; puuid:string; name:string; nickname:string;
         {idx:20, puuid:'47933f05-aa83-5afa-abd6-ca9dd8bfc145', name:'대방', nickname:''}, 
         {idx:21, puuid:'112e9a37-1b5f-50aa-aedb-c9b29dcfd1bc', name:'진현', nickname:''},
         {idx:22, puuid:'b09c92d8-831e-5292-a7ed-b2d7e6a9581f', name:'견희', nickname:''},
+        {idx:23, puuid:'6b12c629-644c-550c-9593-beee583ed780', name:'범이', nickname:''},
     ];

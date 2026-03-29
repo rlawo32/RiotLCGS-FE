@@ -40,7 +40,7 @@ const MainTask = async () => {
     const processName:string = "LeagueClientUx";   
     let credentials;
     let playerArr:any = [];
-    let status_1:string = "N";
+    let status_1:string = "Y";
     let result_1:string = "N";
     let result_2:string = "N";
     let result_3:string = "N";
@@ -74,8 +74,8 @@ const MainTask = async () => {
 
             gameId = gameArr[0].gameId;
             gameType = gameArr[0].gameType;
-            gameId = 8002205128;
-            gameType = 'CUSTOM_GAME';
+            // gameId = 8135414506;
+            // gameType = 'CUSTOM_GAME';
 
             result_2 = gameId.toString.length > 0 && gameType === 'CUSTOM_GAME' ? 'Y' : 'N';
         }
@@ -285,6 +285,8 @@ const MainTask = async () => {
                 previousHighestDivision:highestRankedEntrySR.previousSeasonHighestDivision === '' ? 'NA' : highestRankedEntrySR.previousSeasonHighestDivision,
             });
         }
+
+        // console.log(rankData);
     }
     
     //var isWindows = process.platform;

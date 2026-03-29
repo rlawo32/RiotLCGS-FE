@@ -27,6 +27,8 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     const [changePlayerB, setChangePlayerB] = useState<string>(""); // A를 B로 변경
     const [changePlayerC, setChangePlayerC] = useState<number>(0); // 변경 정보 카운트
 
+    const [latestGame, setLatestGame] = useState<number>(0);
+
     const insertDataHandler = ():void => {
         if(props.connection === 'Y') {
             if( teamBlueTop.name.length > 0 && teamBlueJug.name.length > 0 &&
@@ -52,7 +54,8 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
             
                     axios({
                         method: "POST",
-                        url: "/local/riot/insertData",
+                        url: "/api/riot/insertData",        // REAL
+                        // url: "/local/riot/insertData",   // TEST
                         data: JSON.stringify(riotData),
                         headers: {'Content-type': 'application/json'}
                     }).then((res):void => {
@@ -80,10 +83,12 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 gameData: props.gameData,
                 rankData: props.rankData
             }
+            console.log(riotData);
     
             axios({
                 method: "POST",
-                url: "/local/riot/insertPlayerData",
+                url: "/api/riot/insertPlayerData",      // REAL
+                // url: "/local/riot/insertPlayerData", // TEST
                 data: JSON.stringify(riotData),
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
@@ -319,6 +324,31 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         return result;
     }
 
+    const requestNewgame = async (type:string) => {
+        try {
+            const response = await fetch('/api/RiotWebSocketNewgame', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credentials: props.credential, 
+                }),
+            });
+    
+            if (!response.ok) throw new Error('Network response was not ok. Not found Nickname');
+
+            const responseData = await response.json();
+            console.log(responseData.games.games[0].gameId);
+            if(type === 'N') {
+                setLatestGame(responseData.games.games[0].gameId);
+            } else {
+                return responseData.games.games[0].gameId;
+            }
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
+
     useEffect(() => {
         if(JsonData.autoPlayerData.find((item) => item.gameId === props.gameId) !== undefined) {
             const idx:number = JsonData.autoPlayerData.findIndex((item) => item.gameId === props.gameId);
@@ -423,10 +453,40 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     }, [])
 
     useEffect(() => {
+        let timerId:any;
+        let isStopped:boolean = false;
+        let pollingCount:number = 0;
+
+        const newGamePolling = async () => {
+            if (isStopped) return;
+
+            const newGameId = await requestNewgame('Y');
+            console.log(`newGameId : ${newGameId}`);
+
+            if (newGameId !== latestGame) {
+                console.log(`${latestGame} === ${newGameId} stopping polling.`);
+                setLatestGame(newGameId);
+                return; 
+            }
+
+            console.log(`NewGame Polling... [count:${pollingCount++}]`);
+            timerId = setTimeout(newGamePolling, 60000);
+        };
+
+        newGamePolling();
+
+        return () => {
+            isStopped = true;
+            clearTimeout(timerId);
+        };
+    }, [latestGame]);
+
+    useEffect(() => {
         if(sessionStorage.getItem("change_count") !== null) {
             setChangePlayerC(Number(sessionStorage.getItem("change_count")));
         }
         insertLineData();
+        requestNewgame('N');
     }, [])
 
     useEffect(() => {
@@ -533,7 +593,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
             <div className="button_section">
                 <button onClick={() => insertDataHandler()}>게임 저장</button>
                 <button onClick={() => insertPlayerDataHandler()}>플레이어 저장</button>
-                <button onClick={() => insertTestHandler()}>TEST</button>
+                <button onClick={() => insertTestHandler()}>API TEST</button>
                 <button onClick={() => insertResetHandler()}>초기화</button>
             </div>
             <div className="jsonText_section">

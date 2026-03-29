@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         source: "/local/:path*",
         destination: `http://localhost:8080/:path*`
       },
+      {
+        source: "/api/:path*",
+        destination: "http://158.180.74.133:8080/:path*",
+      },
     ];
   },
 };
