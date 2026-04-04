@@ -176,6 +176,68 @@ h5 {
   }
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+
+.teams-container {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 20px;
+  z-index: 9999;
+  width: 100%;
+  max-width: 650px;
+  padding: 40px;
+  border-radius: 20px;
+  background-color: #444;
+}
+
+.team-box {
+  flex: 1;
+  width: 300px;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.team-name {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid;
+}
+
+/* 블루팀/레드팀 포인트 컬러 */
+.blue { background-color: #f0f7ff; }
+.blue .team-name { color: #007bff; border-color: #007bff; }
+
+.red { background-color: #fff5f5; }
+.red .team-name { color: #dc3545; border-color: #dc3545; }
+
+/* 선수 명단 스타일 */
+.player-list p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  color: #444;
+}
+
+.player-list span {
+  font-weight: bold;
+  color: #888;
+  width: 60px;
+  margin-top: 2px;
+  font-size: 0.9rem;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

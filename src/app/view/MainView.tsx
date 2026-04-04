@@ -6,6 +6,7 @@ import axios from "axios";
 
 import * as JsonData from "./JsonData"
 import { playerData } from "./PlayerData";
+import TestView from "./TestView";
 
 const MainView = (props:{gameId:number, gameData:object, rankData:object, laneData:{puuid:string; team:string; lane:string; name:string;}[], connection:string, credential:any}) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -28,6 +29,9 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     const [changePlayerC, setChangePlayerC] = useState<number>(0); // 변경 정보 카운트
 
     const [latestGame, setLatestGame] = useState<number>(0);
+
+    const [apiTestResult, setApiTestResult] = useState<boolean>(false);
+    const [apiTestData, setApiTestData] = useState<{}>({}); 
 
     const insertDataHandler = ():void => {
         if(props.connection === 'Y') {
@@ -123,20 +127,20 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 {puuid:teamRedMid.puuid, teamId:200, line:'MID', name:teamRedMid.name},
                 {puuid:teamRedAdc.puuid, teamId:200, line:'ADC', name:teamRedAdc.name},
                 {puuid:teamRedSup.puuid, teamId:200, line:'SUP', name:teamRedSup.name}
-            ]
+            ],
+            rankData: props.rankData
         }
 
         axios({
             method: "POST",
-            url: "/local/riot/test",
+            url: "/api/riot/apiTest",       // REAL
+            // url: "/local/riot/apiTest",  // TEST
             data: JSON.stringify(riotData),
             headers: {'Content-type': 'application/json'}
         }).then((res):void => {
-            if(res.data.result) {
-                alert(res.data.message);
-                window.location.reload();
-            } else {
-                alert(res.data.message);
+            if(res.data) {
+                setApiTestResult(true);
+                setApiTestData(res.data);
             }
         }).catch((err):void => {
             alert("서버를 확인해주세요.");
@@ -258,6 +262,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 if (!response.ok) throw new Error('Network response was not ok. Not found Nickname');
 
                 const gameData = (props.gameData as any);
+                console.log(gameData.participantIdentities);
                 const responseData = await response.json();
                 const playerNicknameB = responseData.gameName;
                 const playerTagLineB = responseData.tagLine;
@@ -291,6 +296,14 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         const playerNameB:string = changePlayerPuuidB.split("|")[1];
         const storageData:string = changePlayerPuuidA + "&" + changePlayerPuuidB;
 
+        if(teamBlueTop.puuid === playerPuuidB || teamBlueJug.puuid === playerPuuidB || 
+           teamBlueMid.puuid === playerPuuidB || teamBlueAdc.puuid === playerPuuidB || 
+           teamBlueSup.puuid === playerPuuidB || teamRedTop.puuid === playerPuuidB || 
+           teamRedJug.puuid === playerPuuidB || teamRedMid.puuid === playerPuuidB || 
+           teamRedAdc.puuid === playerPuuidB || teamRedSup.puuid === playerPuuidB) {
+            alert('이미 존재하는 플레이어입니다.');
+            return;
+        }
         sessionStorage.setItem(`change_${changePlayerC}`, storageData);
         sessionStorage.setItem(`change_count`, (changePlayerC+1).toString());
         setChangePlayerC(Number(sessionStorage.getItem('change_count')));
@@ -305,8 +318,13 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     }
 
     const storageDataRemove = (removeItem:string) => {
-        sessionStorage.removeItem(removeItem);
-        insertLineData();
+        const playerPuuidA:string|undefined = sessionStorage.getItem(removeItem)?.split("&")[1].split("|")[0];
+        const playerPuuidB:string|undefined = sessionStorage.getItem(removeItem)?.split("&")[0].split("|")[0];
+        const playerNameB:string|undefined = sessionStorage.getItem(removeItem)?.split("&")[0].split("|")[1];
+        if(playerPuuidA !== undefined && playerPuuidB !== undefined && playerNameB !== undefined) {
+            changeLineData(playerPuuidA, playerPuuidB, playerNameB);
+            sessionStorage.removeItem(removeItem);
+        }
     }
 
     const storageDataList = () => {
@@ -526,6 +544,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
 
     return (
         <div className="view_main">
+            {apiTestResult ? <TestView data={apiTestData} onClose={() => setApiTestResult(false)} /> : <></>}
             <h1>커스텀 게임 입력</h1>
             <div className="setting_section">
                 <div className="jsonText_section">
