@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/api/:path*",
-        destination: "http://158.180.74.133:8080/:path*",
+        // destination: "http://158.180.74.133:8080/:path*",
+        destination: "https://ocp-dudu.duckdns.org/lcgs-be/:path*",
       },
     ];
   },

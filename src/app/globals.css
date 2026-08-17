@@ -47,7 +47,6 @@ h3 {
 h5 {
   font-weight: bold;
   color: red;
-  margin-bottom: 15px;
 }
 
 .view_main {
@@ -77,7 +76,8 @@ h5 {
 
     h5 {
       position: absolute;
-      top: -22px;
+      bottom: -25%;
+      left: 0%;
       width: 200px;
     }
   }
