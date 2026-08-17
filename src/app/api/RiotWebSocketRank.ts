@@ -1,4 +1,4 @@
-import { authenticate, createHttp1Request, createHttp2Request } from "league-connect";
+import { createHttp1Request } from "league-connect";
 
 const RiotWebSocketRank = async (puuid:string, credentials:any) => {
 

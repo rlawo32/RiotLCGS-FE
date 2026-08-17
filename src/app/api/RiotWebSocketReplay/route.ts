@@ -3,11 +3,16 @@ import { createHttp1Request } from "league-connect";
 
 export async function POST(request: Request) {
   try {
-    const { credentials, puuid } = await request.json();
+    const { gameId, credentials } = await request.json();
 
     const response = await createHttp1Request({
-      method: 'GET',
-      url: `/lol-summoner/v2/summoners/puuid/${puuid}`
+      method: 'POST',
+      // url: `/lol-replays/v1/metadata/${gameId}`,
+      // url: `/lol-replays/v1/rofls/${gameId}/watch`,
+      url: `/lol-replays/v1/rofls/${gameId}/download`,
+      body: {
+        contextData: {}
+      }
     }, credentials);
 
     const data = await response.json();

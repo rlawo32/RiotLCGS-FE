@@ -7,7 +7,7 @@ export async function POST(request: Request) {
 
     const response = await createHttp1Request({
       method: 'GET',
-      url: `/lol-summoner/v2/summoners/puuid/${puuid}`
+      url: '/lol-ranked/v1/ranked-stats/' + puuid
     }, credentials);
 
     const data = await response.json();

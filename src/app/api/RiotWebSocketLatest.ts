@@ -1,4 +1,4 @@
-import { authenticate, createHttp1Request, createHttp2Request } from "league-connect";
+import { createHttp1Request } from "league-connect";
 
 const RiotWebSocketLatest = async (credentials:any) => {
   
@@ -6,8 +6,6 @@ const RiotWebSocketLatest = async (credentials:any) => {
     method: 'GET',
     url: '/lol-match-history/v1/products/lol/current-summoner/matches'
   }, credentials);
-
-  console.log(response.json());
 
   return response.json();
 }
