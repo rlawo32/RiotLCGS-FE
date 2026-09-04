@@ -5,8 +5,8 @@ export async function POST(request: Request) {
     const { sessionTeamData } = await request.json();
     console.log(sessionTeamData)
 
-    // const realTimeInfoUrl = 'https://ocp-dudu.duckdns.org/lcg/send-realTimeInfo';
-    const realTimeInfoUrl = 'http://localhost:8080/send-realTimeInfo';
+    const realTimeInfoUrl = 'https://ocp-dudu.duckdns.org/lcg/send-realTimeInfo';
+    // const realTimeInfoUrl = 'http://localhost:8080/send-realTimeInfo';
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);

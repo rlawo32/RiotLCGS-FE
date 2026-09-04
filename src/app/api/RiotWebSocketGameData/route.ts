@@ -8,7 +8,8 @@ export async function POST(request: Request) {
 
     let gameData:object = {};
     let playerArr:any = [];
-    const laneData:{puuid:string; team:string; lane:string; name:string;}[] = [];
+    const laneData:{puuid:string; team:string; lane:string; name:string; level:number;}[] = [];
+    const levelData:{puuid:string; level:any;}[] = [];
 
     const resHistory = await createHttp1Request({
       method: 'GET',
@@ -22,6 +23,21 @@ export async function POST(request: Request) {
       const tempGameData = Object.values(dataHistory);
       const participantIdentities:any = Object.values(tempGameData[10]);
       playerArr = Object.values(participantIdentities);
+    }
+
+    if(playerArr.length > 0) {
+      for(let i=0; i<playerArr.length; i++) {
+        const lvPuuid = playerArr[i].player.puuid;
+        const resLevel = await createHttp1Request({
+          method: 'GET',
+          url: '/lol-summoner/v2/summoners/puuid/' + lvPuuid
+        }, credentials);
+
+        const data = await resLevel.json();
+        const level = data.summonerLevel;
+
+        levelData.push({puuid:lvPuuid, level:level});
+      }
     }
 
     const resTimeline = await createHttp1Request({
@@ -60,7 +76,13 @@ export async function POST(request: Request) {
             const name:string = targetItem.name;
 
             if(timeArr9[i].jungleMinionsKilled >= 30) {
-                laneData.push({puuid:puuid, team:timeArr1[i].participantId < 6 ? 'B' : 'R', lane:'JUG', name:name});
+                let playerLevel:number = 0;
+                for(let i=0; i<levelData.length; i++) {
+                  if(levelData[i].puuid === puuid) {
+                    playerLevel = levelData[i].level;
+                  }
+                }
+                laneData.push({puuid:puuid, team:timeArr1[i].participantId < 6 ? 'B' : 'R', lane:'JUG', name:name, level:playerLevel});
                 participantIdCheck.push(timeArr1[i].participantId);
             }                
           }
@@ -81,7 +103,13 @@ export async function POST(request: Request) {
             }
             const name:string = targetItem.name;
 
-            laneData.push({puuid:puuid, team:searchArrSup[i].id < 6 ? 'B' : 'R', lane:'SUP', name:name});
+            let playerLevel:number = 0;
+            for(let i=0; i<levelData.length; i++) {
+              if(levelData[i].puuid === puuid) {
+                playerLevel = levelData[i].level;
+              }
+            }
+            laneData.push({puuid:puuid, team:searchArrSup[i].id < 6 ? 'B' : 'R', lane:'SUP', name:name, level:playerLevel});
             participantIdCheck.push(searchArrSup[i].id);    
           }
 
@@ -107,7 +135,13 @@ export async function POST(request: Request) {
             }
             const name:string = targetItem.name;
 
-            laneData.push({puuid:puuid, team:searchArrMid2[i].id < 6 ? 'B' : 'R', lane:'MID', name:name});               
+            let playerLevel:number = 0;
+            for(let i=0; i<levelData.length; i++) {
+              if(levelData[i].puuid === puuid) {
+                playerLevel = levelData[i].level;
+              }
+            }
+            laneData.push({puuid:puuid, team:searchArrMid2[i].id < 6 ? 'B' : 'R', lane:'MID', name:name, level:playerLevel});               
             participantIdCheck.push(searchArrMid2[i].id);
           }
 
@@ -159,7 +193,13 @@ export async function POST(request: Request) {
             }
             const name:string = targetItem.name;
 
-            laneData.push({puuid:puuid, team:searchArrAdc2[i].id < 6 ? 'B' : 'R', lane:'ADC', name:name});               
+            let playerLevel:number = 0;
+            for(let i=0; i<levelData.length; i++) {
+              if(levelData[i].puuid === puuid) {
+                playerLevel = levelData[i].level;
+              }
+            }
+            laneData.push({puuid:puuid, team:searchArrAdc2[i].id < 6 ? 'B' : 'R', lane:'ADC', name:name, level:playerLevel});               
             participantIdCheck.push(searchArrAdc2[i].id);
           }
 
@@ -179,12 +219,19 @@ export async function POST(request: Request) {
                 throw new Error(`Player not found: ${puuid}`); 
             }
             const name:string = targetItem.name;
-
-            laneData.push({puuid:puuid, team:searchArrTop[i] < 6 ? 'B' : 'R', lane:'TOP', name:name});               
+            
+            let playerLevel:number = 0;
+            for(let i=0; i<levelData.length; i++) {
+              if(levelData[i].puuid === puuid) {
+                playerLevel = levelData[i].level;
+              }
+            }
+            laneData.push({puuid:puuid, team:searchArrTop[i] < 6 ? 'B' : 'R', lane:'TOP', name:name, level:playerLevel});               
             participantIdCheck.push(searchArrTop[i]);
           }
       }
     }
+    console.log(laneData);
 
     return NextResponse.json(Object.keys(gameData).length > 0 ? {gameData:gameData, laneData:laneData, playerArr:playerArr} : {err:'Failed to fetch game data'}, { status: Object.keys(gameData).length > 0 ? 200 : 500 });
   } catch {
