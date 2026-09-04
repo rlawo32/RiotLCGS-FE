@@ -4,12 +4,32 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 
-import * as JsonData from "./JsonData"
-import { playerData } from "./PlayerData";
+import * as JsonData from "../config/JsonData"
+import { playerData } from "../config/PlayerData";
 import TestView from "./TestView";
 
-const MainView = (props:{gameId:number, gameData:object, rankData:object, laneData:{puuid:string; team:string; lane:string; name:string;}[], connection:string, credential:any}) => {
+import type { TypeGameData, TypeParticipantIdentities } from "@/app/types/gameData";
+import type { TypeRankData } from "@/app/types/rankData";
+import type { TypeLaneData } from "@/app/types/laneData";
+import type { TypeSessionData, TypeSessionGameData, TypeSessionTeams } from "@/app/types/sessionData";
+
+import { getPlayerRankData } from "@/app/util/PlayerDataExtraction";
+import { playerDataCheck, playerDataLaneConversion } from "@/app/util/PlayerDataAgreeCheck";
+import { RiotWebCredentials } from "@/app/config/RiotWebCredentials"
+
+const MainView = () => {
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const [isClient, setIsClient] = useState<boolean>(false);
+    const [clientPort, setClientPort] = useState<number>(0);
+    const [clientPid, setClientPid] = useState<number>(0);
+    const [clientPassword, setClientPassword] = useState<string>("");
+
+    const [gameId, setGameId] = useState<number>(0);
+    const [gameType, setGameType] = useState<string>("");
+    const [gameData, setGameData] = useState<TypeGameData>();
+    const [rankData, setRankData] = useState<TypeRankData[]>([]);
+    const [laneData, setLaneData] = useState<TypeLaneData[]>([]);
 
     const [teamBlueTop, setTeamBlueTop] = useState<{puuid:string, name:string}>({puuid:'', name:''});
     const [teamBlueJug, setTeamBlueJug] = useState<{puuid:string, name:string}>({puuid:'', name:''});
@@ -29,19 +49,24 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     const [changePlayerC, setChangePlayerC] = useState<number>(0); // 변경 정보 카운트
 
     const [latestGame, setLatestGame] = useState<number>(0);
+    const [phaseGame, setPhaseGame] = useState<string>("");
 
     const [apiTestResult, setApiTestResult] = useState<boolean>(false);
     const [apiTestData, setApiTestData] = useState<{}>({}); 
 
     const insertDataHandler = ():void => {
-        if(props.connection === 'Y') {
+        if(!isClient) {
+            alert("롤 클라이언트를 켜주세요.");
+            return;
+        }
+        if(gameId > 0 && gameData !== undefined) {
             if( teamBlueTop.name.length > 0 && teamBlueJug.name.length > 0 &&
                 teamBlueMid.name.length > 0 && teamBlueAdc.name.length > 0 &&
                 teamBlueSup.name.length > 0 && teamRedTop.name.length > 0 &&
                 teamRedJug.name.length > 0 && teamRedMid.name.length > 0 &&
                 teamRedAdc.name.length > 0 && teamRedSup.name.length > 0 ) {
                     const riotData:object = {
-                        gameData: props.gameData,
+                        gameData: gameData,
                         teamData: [
                             {puuid:teamBlueTop.puuid, teamId:100, line:'TOP', name:teamBlueTop.name},
                             {puuid:teamBlueJug.puuid, teamId:100, line:'JUG', name:teamBlueJug.name},
@@ -58,8 +83,8 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
             
                     axios({
                         method: "POST",
-                        url: "/api/riot/insertData",        // REAL
-                        // url: "/local/riot/insertData",   // TEST
+                        url: "/api/riot/insertGameData",        // REAL
+                        // url: "/local/riot/insertGameData",   // TEST
                         data: JSON.stringify(riotData),
                         headers: {'Content-type': 'application/json'}
                     }).then((res):void => {
@@ -77,22 +102,26 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 alert("포지션에 플레이어 이름을 입력해주세요.");
             }
         } else {
-            alert("롤 클라이언트를 켜주세요.");
+            alert("Game ID 또는 Game Data가 없습니다.");
         }
     }
 
     const insertPlayerDataHandler = ():void => {
-        if(props.connection === 'Y') {
+        if(!isClient) {
+            alert("롤 클라이언트를 켜주세요.");
+            return;
+        }
+        if(gameId > 0 && gameData !== undefined && rankData.length > 0) {
             const riotData:object = {
-                gameData: props.gameData,
-                rankData: props.rankData
+                gameData: gameData,
+                rankData: rankData
             }
             console.log(riotData);
     
             axios({
                 method: "POST",
-                url: "/api/riot/insertPlayerData",      // REAL
-                // url: "/local/riot/insertPlayerData", // TEST
+                // url: "/api/riot/insertPlayerData",      // REAL
+                url: "/local/riot/insertPlayerData", // TEST
                 data: JSON.stringify(riotData),
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
@@ -107,15 +136,13 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 console.log(err.message);
             })
         } else {
-            alert("롤 클라이언트를 켜주세요.");
+            alert("Game ID 또는 Game Data/Rank Data가 없습니다.");
         }
     }
 
-    const insertTestHandler = ():void => {
-        console.log(props.gameData);
-
+    const callTestHandler = (flag:string):void => {
         const riotData:object = {
-            gameData: props.gameData,
+            gameData: gameData,
             teamData: [
                 {puuid:teamBlueTop.puuid, teamId:100, line:'TOP', name:teamBlueTop.name},
                 {puuid:teamBlueJug.puuid, teamId:100, line:'JUG', name:teamBlueJug.name},
@@ -128,13 +155,13 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 {puuid:teamRedAdc.puuid, teamId:200, line:'ADC', name:teamRedAdc.name},
                 {puuid:teamRedSup.puuid, teamId:200, line:'SUP', name:teamRedSup.name}
             ],
-            rankData: props.rankData
+            rankData: rankData
         }
 
         axios({
             method: "POST",
-            url: "/api/riot/apiTest",       // REAL
-            // url: "/local/riot/apiTest",  // TEST
+            // url: `/api/riot/${flag}`,       // REAL
+            url: `/local/riot/${flag}`,  // TEST
             data: JSON.stringify(riotData),
             headers: {'Content-type': 'application/json'}
         }).then((res):void => {
@@ -148,24 +175,33 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         })
     }
 
-    const insertResetHandler = ():void => {
-        setTeamBlueTop({puuid:'', name:''});
-        setTeamBlueJug({puuid:'', name:''});
-        setTeamBlueMid({puuid:'', name:''});
-        setTeamBlueAdc({puuid:'', name:''});
-        setTeamBlueSup({puuid:'', name:''});
-        setTeamRedTop({puuid:'', name:''});
-        setTeamRedJug({puuid:'', name:''});
-        setTeamRedMid({puuid:'', name:''});
-        setTeamRedAdc({puuid:'', name:''});
-        setTeamRedSup({puuid:'', name:''});
+    const imageUploadHandler = ():void => {
+        axios({
+            method: "GET",
+            url: `/api/riot/uploadImage`,       // REAL
+            // url: `/local/riot/uploadImage`,  // TEST
+        }).then(():void => {
+        }).catch((err):void => {
+            console.log(err.message);
+        })
+    }
+
+    const patchNoteUpdateHandler = ():void => {
+        axios({
+            method: "GET",
+            // url: `/api/riot/updatePatchNote`,       // REAL
+            url: `/local/riot/updatePatchNote?version=16`,  // TEST
+        }).then(():void => {
+        }).catch((err):void => {
+            console.log(err.message);
+        })
     }
 
     const insertJsonHandler = ():string => {
         const jsonData:{rowNum:number, gameId:number, teamBlueTop:string, teamBlueJug:string, teamBlueMid:string, teamBlueAdc:string, teamBlueSup:string, 
             teamRedTop:string, teamRedJug:string, teamRedMid:string, teamRedAdc:string, teamRedSup:string} 
             = 
-            {rowNum:JsonData.autoPlayerData.length+1, gameId:props.gameId, 
+            {rowNum:JsonData.autoPlayerData.length+1, gameId:gameId, 
                 teamBlueTop:teamBlueTop.name, teamBlueJug:teamBlueJug.name, teamBlueMid:teamBlueMid.name, teamBlueAdc:teamBlueAdc.name, teamBlueSup:teamBlueSup.name, 
                 teamRedTop:teamRedTop.name, teamRedJug:teamRedJug.name, teamRedMid:teamRedMid.name, teamRedAdc:teamRedAdc.name, teamRedSup:teamRedSup.name};
 
@@ -188,24 +224,24 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
     }
 
     const insertLineData = () => {
-        props.laneData.forEach((item:any, idx:number, arr:any[]) => {
-                if(item.team === 'B') {
-                    if(item.lane === 'TOP') setTeamBlueTop({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'JUG') setTeamBlueJug({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'MID') setTeamBlueMid({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'ADC') setTeamBlueAdc({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'SUP') setTeamBlueSup({puuid:item.puuid, name:item.name});
-                } else {
-                    if(item.lane === 'TOP') setTeamRedTop({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'JUG') setTeamRedJug({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'MID') setTeamRedMid({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'ADC') setTeamRedAdc({puuid:item.puuid, name:item.name});
-                    else if(item.lane === 'SUP') setTeamRedSup({puuid:item.puuid, name:item.name});
-                }
+        laneData.forEach((item:any, idx:number, arr:any[]) => {
+            if(item.team === 'B') {
+                if(item.lane === 'TOP') setTeamBlueTop({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'JUG') setTeamBlueJug({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'MID') setTeamBlueMid({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'ADC') setTeamBlueAdc({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'SUP') setTeamBlueSup({puuid:item.puuid, name:item.name});
+            } else {
+                if(item.lane === 'TOP') setTeamRedTop({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'JUG') setTeamRedJug({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'MID') setTeamRedMid({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'ADC') setTeamRedAdc({puuid:item.puuid, name:item.name});
+                else if(item.lane === 'SUP') setTeamRedSup({puuid:item.puuid, name:item.name});
+            }
 
-                if (idx === arr.length-1) {
-                    setDataLoad(!dataLoad);
-                }
+            if (idx === arr.length-1) {
+                setDataLoad(!dataLoad);
+            }
         })
     }
     
@@ -250,19 +286,26 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
 
         const requestPlayerNickname = async () => {
             try {
+                if(!isClient) {
+                    alert("롤 클라이언트를 켜주세요.");
+                    return;
+                }
                 const response = await fetch('/api/RiotWebSocketNickname', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        puuid: playerPuuidB, 
-                        credentials: props.credential, 
+                        credentials: {
+                            ...RiotWebCredentials,
+                            port: clientPort,
+                            pid: clientPid,
+                            password: clientPassword,
+                        },
+                        puuid: playerPuuidB,
                     }),
                 });
         
                 if (!response.ok) throw new Error('Network response was not ok. Not found Nickname');
 
-                const gameData = (props.gameData as any);
-                console.log(gameData.participantIdentities);
                 const responseData = await response.json();
                 const playerNicknameB = responseData.gameName;
                 const playerTagLineB = responseData.tagLine;
@@ -270,7 +313,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 const playerSummonerId = responseData.summonerId;
                 console.log("변경할 정보 => 닉네임:", playerNicknameB + " / 태그:" + playerTagLineB + " / 아이콘:" + playerProfileIcon + " / ID:" + playerSummonerId);
 
-                gameData.participantIdentities.forEach((item:any) => {
+                gameData.participantIdentities.forEach((item:TypeParticipantIdentities) => {
                     if(item.player.puuid === playerPuuidA) {
                         item.player.puuid = playerPuuidB;
                         item.player.gameName = playerNicknameB;
@@ -342,24 +385,34 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         return result;
     }
 
-    const requestNewgame = async (type:string) => {
+    const requestGameId = async (type:string) => {
         try {
-            const response = await fetch('/api/RiotWebSocketNewgame', {
+            if(!isClient) {
+                alert("롤 클라이언트를 켜주세요.");
+                return;
+            }
+            const response = await fetch('/api/RiotWebSocketGameLatest', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    credentials: props.credential, 
+                    credentials: {
+                        ...RiotWebCredentials,
+                        port: clientPort,
+                        pid: clientPid,
+                        password: clientPassword,
+                    },
                 }),
             });
     
-            if (!response.ok) throw new Error('Network response was not ok. Not found Nickname');
+            if (!response.ok) throw new Error('Network response was not ok. Not found Newgame');
 
             const responseData = await response.json();
-            console.log(responseData.games.games[0].gameId);
+            setGameId(responseData.gameId);
+            setGameType(responseData.gameType);
             if(type === 'N') {
-                setLatestGame(responseData.games.games[0].gameId);
+                setLatestGame(responseData.gameId);
             } else {
-                return responseData.games.games[0].gameId;
+                return responseData.gameId;
             }
         } catch (error) {
             const msg = error instanceof Error ? error.message : '알 수 없는 오류';
@@ -367,108 +420,208 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         } 
     }
 
-    useEffect(() => {
-        if(JsonData.autoPlayerData.find((item) => item.gameId === props.gameId) !== undefined) {
-            const idx:number = JsonData.autoPlayerData.findIndex((item) => item.gameId === props.gameId);
-            const oldData:{
-                rowNum:number,
-                gameId:number,
-                teamBlueTop:string,
-                teamBlueJug:string,
-                teamBlueMid:string,
-                teamBlueAdc:string,
-                teamBlueSup:string,
-                teamRedTop:string,
-                teamRedJug:string,
-                teamRedMid:string,
-                teamRedAdc:string,
-                teamRedSup:string
-            } = JsonData.autoPlayerData[idx];
-            const newData:{puuid:string; team:string; lane:string; name:string;}[] = props.laneData;
-
-            const oldBlueTop:string = oldData.teamBlueTop;
-            const newBlueTop:string|undefined = newData.find((item) => item.team === 'B' && item.lane === 'TOP')?.name;
-            if(oldBlueTop === newBlueTop) {
-                console.log(`BLUE TOP 일치!`);
-            } else {
-                console.log(`${oldBlueTop} / ${newBlueTop} : BLUE TOP 불일치!`);
+    const requestGameData = async () => {
+        try {
+            if(!isClient) {
+                alert("롤 클라이언트를 켜주세요.");
+                return;
             }
+            if(gameId > 0) {
+                const response = await fetch('/api/RiotWebSocketGameData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credentials: {
+                            ...RiotWebCredentials,
+                            port: clientPort,
+                            pid: clientPid,
+                            password: clientPassword,
+                        },
+                        gameId: gameId,
+                    }),
+                });
 
-            const oldBlueJug:string = oldData.teamBlueJug;
-            const newBlueJug:string|undefined = newData.find((item) => item.team === 'B' && item.lane === 'JUG')?.name;
-            if(oldBlueJug === newBlueJug) {
-                console.log(`BLUE JUG 일치!`);
+                const resGameData = await response.json();
+                setGameData(resGameData.gameData);
+                setLaneData(resGameData.laneData);
+                if(resGameData.playerArr.length > 0) {
+                    getPlayerRankData(resGameData.playerArr, clientPort, clientPid, clientPassword).then((rankData) => {
+                        setRankData(rankData);
+                    });
+                }
             } else {
-                console.log(`${oldBlueJug} / ${newBlueJug} : BLUE JUG 불일치!`);
+                alert("게임 ID를 입력해주세요.");
             }
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
 
-            const oldBlueMid:string = oldData.teamBlueMid;
-            const newBlueMid:string|undefined = newData.find((item) => item.team === 'B' && item.lane === 'MID')?.name;
-            if(oldBlueMid === newBlueMid) {
-                console.log(`BLUE MID 일치!`);
-            } else {
-                console.log(`${oldBlueMid} / ${newBlueMid} : BLUE MID 불일치!`);
+    const requestGameFlow = async (type:string) => {
+        try {
+            if(!isClient) {
+                alert("롤 클라이언트를 켜주세요.");
+                return;
             }
+            const response = await fetch('/api/RiotWebSocketGameFlow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credentials: {
+                        ...RiotWebCredentials,
+                        port: clientPort,
+                        pid: clientPid,
+                        password: clientPassword,
+                    },
+                }),
+            });
+    
+            if (!response.ok) throw new Error('Network response was not ok. Not found GameFlow');
 
-            const oldBlueAdc:string = oldData.teamBlueAdc;
-            const newBlueAdc:string|undefined = newData.find((item) => item.team === 'B' && item.lane === 'ADC')?.name;
-            if(oldBlueAdc === newBlueAdc) {
-                console.log(`BLUE ADC 일치!`);
-            } else {
-                console.log(`${oldBlueAdc} / ${newBlueAdc} : BLUE ADC 불일치!`);
-            }
+            const responseData = await response.json();
 
-            const oldBlueSup:string = oldData.teamBlueSup;
-            const newBlueSup:string|undefined = newData.find((item) => item.team === 'B' && item.lane === 'SUP')?.name;
-            if(oldBlueSup === newBlueSup) {
-                console.log(`BLUE SUP 일치!`);
+            if(type === 'N') {
+                setPhaseGame(responseData);
             } else {
-                console.log(`${oldBlueSup} / ${newBlueSup} : BLUE SUP 불일치!`);
+                return responseData;
             }
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
 
-            const oldRedTop:string = oldData.teamRedTop;
-            const newRedTop:string|undefined = newData.find((item) => item.team === 'R' && item.lane === 'TOP')?.name;
-            if(oldRedTop === newRedTop) {
-                console.log(`RED TOP 일치!`);
-            } else {
-                console.log(`${oldRedTop} / ${newRedTop} : RED TOP 불일치!`);
+    const requestGameSession = async () => {
+        try {
+            if(!isClient) {
+                alert("롤 클라이언트를 켜주세요.");
+                return;
             }
+            // const response = await fetch('/api/RiotWebSocketGameSession', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({
+            //         credentials: {
+            //             ...RiotWebCredentials,
+            //             port: clientPort,
+            //             pid: clientPid,
+            //             password: clientPassword,
+            //         },
+            //     }),
+            // });
 
-            const oldRedJug:string = oldData.teamRedJug;
-            const newRedJug:string|undefined = newData.find((item) => item.team === 'R' && item.lane === 'JUG')?.name;
-            if(oldRedJug === newRedJug) {
-                console.log(`RED JUG 일치!`);
-            } else {
-                console.log(`${oldRedJug} / ${newRedJug} : RED JUG 불일치!`);
-            }
+            // const responseData:TypeSessionData = await response.json();
 
-            const oldRedMid:string = oldData.teamRedMid;
-            const newRedMid:string|undefined = newData.find((item) => item.team === 'R' && item.lane === 'MID')?.name;
-            if(oldRedMid === newRedMid) {
-                console.log(`RED MID 일치!`);
-            } else {
-                console.log(`${oldRedMid} / ${newRedMid} : RED MID 불일치!`);
-            }
+            // const inProgressGameData:TypeSessionGameData = responseData.gameData;
+            // const inProgressGameId:number = inProgressGameData.gameId;
+            // const teamOne:TypeSessionTeams[] = inProgressGameData.teamOne;
+            // const teamTwo:TypeSessionTeams[] = inProgressGameData.teamTwo;
+            // console.log(teamOne);
+            // console.log(teamTwo);
 
-            const oldRedAdc:string = oldData.teamRedAdc;
-            const newRedAdc:string|undefined = newData.find((item) => item.team === 'R' && item.lane === 'ADC')?.name;
-            if(oldRedAdc === newRedAdc) {
-                console.log(`RED ADC 일치!`);
-            } else {
-                console.log(`${oldRedAdc} / ${newRedAdc} : RED ADC 불일치!`);
+            // if(teamOne.length >= 5 && teamTwo.length >= 5) {
+            if(isClient) {                
+                const sessionTeamData:object = {
+                    // teamBlue: [
+                    //     {puuid:teamOne[0].puuid, lane:playerDataLaneConversion(teamOne[0].selectedPosition), championId:teamOne[0].championId},
+                    //     {puuid:teamOne[1].puuid, lane:playerDataLaneConversion(teamOne[1].selectedPosition), championId:teamOne[1].championId},
+                    //     {puuid:teamOne[2].puuid, lane:playerDataLaneConversion(teamOne[2].selectedPosition), championId:teamOne[2].championId},
+                    //     {puuid:teamOne[3].puuid, lane:playerDataLaneConversion(teamOne[3].selectedPosition), championId:teamOne[3].championId},
+                    //     {puuid:teamOne[4].puuid, lane:playerDataLaneConversion(teamOne[4].selectedPosition), championId:teamOne[4].championId},
+                    // ],
+                    // teamRed: [
+                    //     {puuid:teamTwo[0].puuid, lane:playerDataLaneConversion(teamTwo[0].selectedPosition), championId:teamTwo[0].championId},
+                    //     {puuid:teamTwo[1].puuid, lane:playerDataLaneConversion(teamTwo[1].selectedPosition), championId:teamTwo[1].championId},
+                    //     {puuid:teamTwo[2].puuid, lane:playerDataLaneConversion(teamTwo[2].selectedPosition), championId:teamTwo[2].championId},
+                    //     {puuid:teamTwo[3].puuid, lane:playerDataLaneConversion(teamTwo[3].selectedPosition), championId:teamTwo[3].championId},
+                    //     {puuid:teamTwo[4].puuid, lane:playerDataLaneConversion(teamTwo[4].selectedPosition), championId:teamTwo[4].championId},
+                    // ]
+                    teamBlue: [
+                        {puuid:'bdfd249c-244c-536a-8c56-fe2ff8e74792', championId:106, lane:playerDataLaneConversion('TOP')},
+                        {puuid:'1e062cfe-c62e-53ef-9145-ab0d6c76d40d', championId:59, lane:playerDataLaneConversion('JUNGLE')},
+                        {puuid:'3d63dcaf-bfbc-5327-8551-45157712d820', championId:84, lane:playerDataLaneConversion('MIDDLE')},
+                        {puuid:'60e3571d-2b64-5e2b-b9ba-c73789b86639', championId:18, lane:playerDataLaneConversion('BOTTOM')},
+                        {puuid:'1127fed4-642a-5b70-bab9-1c7a326ca923', championId:111, lane:playerDataLaneConversion('UTILITY')},
+                    ],
+                    teamRed: [
+                        {puuid:'50834af7-5fad-538a-83b5-e6a26a4ccfee', championId:516, lane:playerDataLaneConversion('TOP')},
+                        {puuid:'864ff5ac-b218-55fd-94ba-cb9cabe66ce4', championId:950, lane:playerDataLaneConversion('JUNGLE')},
+                        {puuid:'1c0748d2-418d-5324-a035-70736d9f6138', championId:517, lane:playerDataLaneConversion('MIDDLE')},
+                        {puuid:'fd234707-5d0b-5db9-92e1-9b8fae3b1b84', championId:51, lane:playerDataLaneConversion('BOTTOM')},
+                        {puuid:'8535ea73-208b-5bff-8b98-c138f2717cf6', championId:161, lane:playerDataLaneConversion('UTILITY')},
+                    ]
+                }
+                await fetch('/api/RiotWebSocketRealTimeInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionTeamData: sessionTeamData,
+                    }),
+                });
             }
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
 
-            const oldRedSup:string = oldData.teamRedSup;
-            const newRedSup:string|undefined = newData.find((item) => item.team === 'R' && item.lane === 'SUP')?.name;
-            if(oldRedSup === newRedSup) {
-                console.log(`RED SUP 일치!`);
+    const requestGameConnection = async () => {
+        try {
+            const response = await fetch('/api/RiotWebSocketConnection', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const responseData = await response.json();
+
+            if(responseData.status === 200) {
+                setClientPort(responseData.port);
+                setClientPid(responseData.pid);
+                setClientPassword(responseData.password);
+                setIsClient(true);
             } else {
-                console.log(`${oldRedSup} / ${newRedSup} : RED SUP 불일치!`);
+                setClientPort(0);
+                setClientPid(0);
+                setClientPassword("");
+                setIsClient(false);
             }
-        } else {
-            console.log(`JSON DATA 없음!`)
-        }
-    }, [])
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
+
+    const requestPlayerLevel = async () => {
+        try {
+            if(!isClient) {
+                alert("롤 클라이언트를 켜주세요.");
+                return;
+            }
+            const response = await fetch('/api/RiotWebSocketPlayerLevel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credentials: {
+                        ...RiotWebCredentials,
+                        port: clientPort,
+                        pid: clientPid,
+                        password: clientPassword,
+                    },
+                    puuid: 'bf62f62b-d33d-5315-85d6-89dc2fa26f2b',
+                }),
+            });
+    
+            if (!response.ok) throw new Error('Network response was not ok. Not found GameFlow');
+
+            const responseData = await response.json();
+
+            console.log(responseData.summonerLevel);
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+            console.error(`오류 발생: ${msg}`);
+        } 
+    }
 
     useEffect(() => {
         let timerId:any;
@@ -478,7 +631,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
         const newGamePolling = async () => {
             if (isStopped) return;
 
-            const newGameId = await requestNewgame('Y');
+            const newGameId = await requestGameId('Y');
             console.log(`newGameId : ${newGameId}`);
 
             if (newGameId !== latestGame) {
@@ -491,25 +644,49 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
             timerId = setTimeout(newGamePolling, 60000);
         };
 
-        newGamePolling();
+        const newPhasePolling = async () => {
+            if (isStopped) return;
+
+            const newPhase = await requestGameFlow('Y');
+            console.log(`Gameflow : ${newPhase}`);
+            if(newPhase === 'InProgress') {
+                console.log(`newPhase stopping polling.`);
+                requestGameSession();
+                return; 
+            }
+
+            console.log(`newPhase Polling... [count:${pollingCount++}]`);
+            timerId = setTimeout(newPhasePolling, 5000);
+        };
+
+        // newGamePolling();
+        console.log(isClient)
+        if(isClient) {
+            newPhasePolling();
+        }
 
         return () => {
             isStopped = true;
             clearTimeout(timerId);
         };
-    }, [latestGame]);
+    }, [gameId]);
 
     useEffect(() => {
         if(sessionStorage.getItem("change_count") !== null) {
             setChangePlayerC(Number(sessionStorage.getItem("change_count")));
         }
-        insertLineData();
-        requestNewgame('N');
+        requestGameConnection();
+        // requestGameId('N');
     }, [])
 
     useEffect(() => {
+        insertLineData();
+        playerDataCheck(gameId, laneData);
+    }, [laneData])
+
+    useEffect(() => {
         for(let i = 0; i < JsonData.autoPlayerData.length; i++) {
-            if(JsonData.autoPlayerData[i].gameId === props.gameId) {
+            if(JsonData.autoPlayerData[i].gameId === gameId) {
                 setTeamBlueTop({puuid:'', name:JsonData.autoPlayerData[i].teamBlueTop});
                 setTeamBlueJug({puuid:'', name:JsonData.autoPlayerData[i].teamBlueJug});
                 setTeamBlueMid({puuid:'', name:JsonData.autoPlayerData[i].teamBlueMid});
@@ -523,7 +700,7 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 break;
             }
         }
-    }, [props.gameId])
+    }, [gameId])
 
     useEffect(() => {
         const jsonText:string = insertJsonHandler();
@@ -563,9 +740,10 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
                 <div className="gameId_section">
                     <h3>GAME ID</h3>
                     <div className="control_box">
-                        <input type="text" value={props.gameId} readOnly />
-                        {props.connection === 'N' ? <h5>롤 클라이언트가 꺼져있습니다.</h5> : <></>}
+                        <input type="text" value={gameId} onChange={(e) => setGameId(e.target.valueAsNumber)} />
+                        {/* {!client ? <h5>롤 클라이언트가 꺼져있습니다.</h5> : <></>} */}
                     </div>
+                    <div><h5>{gameType}</h5></div>
                 </div>
                 <div className="jsonText_section">
                     <h3>JSON DATA</h3>
@@ -612,8 +790,16 @@ const MainView = (props:{gameId:number, gameData:object, rankData:object, laneDa
             <div className="button_section">
                 <button onClick={() => insertDataHandler()}>게임 저장</button>
                 <button onClick={() => insertPlayerDataHandler()}>플레이어 저장</button>
-                <button onClick={() => insertTestHandler()}>API TEST</button>
-                <button onClick={() => insertResetHandler()}>초기화</button>
+                <button onClick={() => callTestHandler('apiTest')}>API TEST</button>
+                <button onClick={() => callTestHandler('insertTest')}>INSERT TEST</button>
+                <button onClick={() => imageUploadHandler()}>IMAGE UPLOAD</button>
+                <button onClick={() => patchNoteUpdateHandler()}>패치노트 업데이트</button>
+                <button onClick={() => requestGameData()}>게임 Data 가져오기</button>
+                <button onClick={() => requestGameId('Y')}>게임 ID 가져오기</button>
+                <button onClick={() => requestGameFlow('Y')}>GAMEFLOW TEST</button>
+                <button onClick={() => requestGameSession()}>SESSION TEST</button>
+                <button onClick={() => requestPlayerLevel()}>LEVEL TEST</button>
+                
             </div>
             <div className="jsonText_section">
             </div>
