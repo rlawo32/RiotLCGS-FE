@@ -120,8 +120,8 @@ const MainView = () => {
     
             axios({
                 method: "POST",
-                // url: "/api/riot/insertPlayerData",      // REAL
-                url: "/local/riot/insertPlayerData", // TEST
+                url: "/api/riot/insertPlayerData",      // REAL
+                // url: "/local/riot/insertPlayerData", // TEST
                 data: JSON.stringify(riotData),
                 headers: {'Content-type': 'application/json'}
             }).then((res):void => {
@@ -160,8 +160,8 @@ const MainView = () => {
 
         axios({
             method: "POST",
-            // url: `/api/riot/${flag}`,       // REAL
-            url: `/local/riot/${flag}`,  // TEST
+            url: `/api/riot/${flag}`,       // REAL
+            // url: `/local/riot/${flag}`,  // TEST
             data: JSON.stringify(riotData),
             headers: {'Content-type': 'application/json'}
         }).then((res):void => {
@@ -189,8 +189,8 @@ const MainView = () => {
     const patchNoteUpdateHandler = ():void => {
         axios({
             method: "GET",
-            // url: `/api/riot/updatePatchNote`,       // REAL
-            url: `/local/riot/updatePatchNote?version=16`,  // TEST
+            url: `/api/riot/updatePatchNote?version=19`,       // REAL
+            // url: `/local/riot/updatePatchNote?version=16`,  // TEST
         }).then(():void => {
         }).catch((err):void => {
             console.log(err.message);
@@ -498,59 +498,80 @@ const MainView = () => {
                 alert("롤 클라이언트를 켜주세요.");
                 return;
             }
-            // const response = await fetch('/api/RiotWebSocketGameSession', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({
-            //         credentials: {
-            //             ...RiotWebCredentials,
-            //             port: clientPort,
-            //             pid: clientPid,
-            //             password: clientPassword,
-            //         },
-            //     }),
-            // });
+            const response1 = await fetch('/api/RiotWebSocketGameFlow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credentials: {
+                        ...RiotWebCredentials,
+                        port: clientPort,
+                        pid: clientPid,
+                        password: clientPassword,
+                    },
+                }),
+            });
 
-            // const responseData:TypeSessionData = await response.json();
+            const responseData1 = await response1.json();
+            console.log(responseData1);
+            if (responseData1 !== 'InProgress') {
+                alert('게임이 진행 중이 아닙니다.');
+                return;
+            }
 
-            // const inProgressGameData:TypeSessionGameData = responseData.gameData;
-            // const inProgressGameId:number = inProgressGameData.gameId;
-            // const teamOne:TypeSessionTeams[] = inProgressGameData.teamOne;
-            // const teamTwo:TypeSessionTeams[] = inProgressGameData.teamTwo;
-            // console.log(teamOne);
-            // console.log(teamTwo);
+            const response2 = await fetch('/api/RiotWebSocketGameSession', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credentials: {
+                        ...RiotWebCredentials,
+                        port: clientPort,
+                        pid: clientPid,
+                        password: clientPassword,
+                    },
+                }),
+            });
 
-            // if(teamOne.length >= 5 && teamTwo.length >= 5) {
-            if(isClient) {                
+            const responseData2:TypeSessionData = await response2.json();
+
+            console.log(responseData2);
+            const inProgressGameData:TypeSessionGameData = responseData2.gameData;
+            const inProgressGameId:number = inProgressGameData.gameId;
+            const teamOne:TypeSessionTeams[] = inProgressGameData.teamOne;
+            const teamTwo:TypeSessionTeams[] = inProgressGameData.teamTwo;
+            console.log(teamOne);
+            console.log(teamTwo);
+
+            if(teamOne.length === 5 && teamTwo.length === 5) {
+            // if(isClient) {                
                 const sessionTeamData:object = {
-                    // teamBlue: [
-                    //     {puuid:teamOne[0].puuid, lane:playerDataLaneConversion(teamOne[0].selectedPosition), championId:teamOne[0].championId},
-                    //     {puuid:teamOne[1].puuid, lane:playerDataLaneConversion(teamOne[1].selectedPosition), championId:teamOne[1].championId},
-                    //     {puuid:teamOne[2].puuid, lane:playerDataLaneConversion(teamOne[2].selectedPosition), championId:teamOne[2].championId},
-                    //     {puuid:teamOne[3].puuid, lane:playerDataLaneConversion(teamOne[3].selectedPosition), championId:teamOne[3].championId},
-                    //     {puuid:teamOne[4].puuid, lane:playerDataLaneConversion(teamOne[4].selectedPosition), championId:teamOne[4].championId},
-                    // ],
-                    // teamRed: [
-                    //     {puuid:teamTwo[0].puuid, lane:playerDataLaneConversion(teamTwo[0].selectedPosition), championId:teamTwo[0].championId},
-                    //     {puuid:teamTwo[1].puuid, lane:playerDataLaneConversion(teamTwo[1].selectedPosition), championId:teamTwo[1].championId},
-                    //     {puuid:teamTwo[2].puuid, lane:playerDataLaneConversion(teamTwo[2].selectedPosition), championId:teamTwo[2].championId},
-                    //     {puuid:teamTwo[3].puuid, lane:playerDataLaneConversion(teamTwo[3].selectedPosition), championId:teamTwo[3].championId},
-                    //     {puuid:teamTwo[4].puuid, lane:playerDataLaneConversion(teamTwo[4].selectedPosition), championId:teamTwo[4].championId},
-                    // ]
                     teamBlue: [
-                        {puuid:'bdfd249c-244c-536a-8c56-fe2ff8e74792', championId:106, lane:playerDataLaneConversion('TOP')},
-                        {puuid:'1e062cfe-c62e-53ef-9145-ab0d6c76d40d', championId:59, lane:playerDataLaneConversion('JUNGLE')},
-                        {puuid:'3d63dcaf-bfbc-5327-8551-45157712d820', championId:84, lane:playerDataLaneConversion('MIDDLE')},
-                        {puuid:'60e3571d-2b64-5e2b-b9ba-c73789b86639', championId:18, lane:playerDataLaneConversion('BOTTOM')},
-                        {puuid:'1127fed4-642a-5b70-bab9-1c7a326ca923', championId:111, lane:playerDataLaneConversion('UTILITY')},
+                        {puuid:teamOne[0].puuid, lane:playerDataLaneConversion(teamOne[0].selectedPosition), championId:teamOne[0].championId},
+                        {puuid:teamOne[1].puuid, lane:playerDataLaneConversion(teamOne[1].selectedPosition), championId:teamOne[1].championId},
+                        {puuid:teamOne[2].puuid, lane:playerDataLaneConversion(teamOne[2].selectedPosition), championId:teamOne[2].championId},
+                        {puuid:teamOne[3].puuid, lane:playerDataLaneConversion(teamOne[3].selectedPosition), championId:teamOne[3].championId},
+                        {puuid:teamOne[4].puuid, lane:playerDataLaneConversion(teamOne[4].selectedPosition), championId:teamOne[4].championId},
                     ],
                     teamRed: [
-                        {puuid:'50834af7-5fad-538a-83b5-e6a26a4ccfee', championId:516, lane:playerDataLaneConversion('TOP')},
-                        {puuid:'864ff5ac-b218-55fd-94ba-cb9cabe66ce4', championId:950, lane:playerDataLaneConversion('JUNGLE')},
-                        {puuid:'1c0748d2-418d-5324-a035-70736d9f6138', championId:517, lane:playerDataLaneConversion('MIDDLE')},
-                        {puuid:'fd234707-5d0b-5db9-92e1-9b8fae3b1b84', championId:51, lane:playerDataLaneConversion('BOTTOM')},
-                        {puuid:'8535ea73-208b-5bff-8b98-c138f2717cf6', championId:161, lane:playerDataLaneConversion('UTILITY')},
+                        {puuid:teamTwo[0].puuid, lane:playerDataLaneConversion(teamTwo[0].selectedPosition), championId:teamTwo[0].championId},
+                        {puuid:teamTwo[1].puuid, lane:playerDataLaneConversion(teamTwo[1].selectedPosition), championId:teamTwo[1].championId},
+                        {puuid:teamTwo[2].puuid, lane:playerDataLaneConversion(teamTwo[2].selectedPosition), championId:teamTwo[2].championId},
+                        {puuid:teamTwo[3].puuid, lane:playerDataLaneConversion(teamTwo[3].selectedPosition), championId:teamTwo[3].championId},
+                        {puuid:teamTwo[4].puuid, lane:playerDataLaneConversion(teamTwo[4].selectedPosition), championId:teamTwo[4].championId},
                     ]
+                    // teamBlue: [
+                    //     {puuid:'bdfd249c-244c-536a-8c56-fe2ff8e74792', championId:106, lane:playerDataLaneConversion('TOP')},
+                    //     {puuid:'1e062cfe-c62e-53ef-9145-ab0d6c76d40d', championId:59, lane:playerDataLaneConversion('JUNGLE')},
+                    //     {puuid:'3d63dcaf-bfbc-5327-8551-45157712d820', championId:84, lane:playerDataLaneConversion('MIDDLE')},
+                    //     {puuid:'60e3571d-2b64-5e2b-b9ba-c73789b86639', championId:18, lane:playerDataLaneConversion('BOTTOM')},
+                    //     {puuid:'1127fed4-642a-5b70-bab9-1c7a326ca923', championId:111, lane:playerDataLaneConversion('UTILITY')},
+                    // ],
+                    // teamRed: [
+                    //     {puuid:'50834af7-5fad-538a-83b5-e6a26a4ccfee', championId:516, lane:playerDataLaneConversion('TOP')},
+                    //     {puuid:'864ff5ac-b218-55fd-94ba-cb9cabe66ce4', championId:950, lane:playerDataLaneConversion('JUNGLE')},
+                    //     {puuid:'1c0748d2-418d-5324-a035-70736d9f6138', championId:517, lane:playerDataLaneConversion('MIDDLE')},
+                    //     {puuid:'fd234707-5d0b-5db9-92e1-9b8fae3b1b84', championId:51, lane:playerDataLaneConversion('BOTTOM')},
+                    //     {puuid:'8535ea73-208b-5bff-8b98-c138f2717cf6', championId:161, lane:playerDataLaneConversion('UTILITY')},
+                    // ]
                 }
                 await fetch('/api/RiotWebSocketRealTimeInfo', {
                     method: 'POST',
